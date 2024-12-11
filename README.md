@@ -1,5 +1,6 @@
 # Trabalho Final de Fundamentos de Computação Gráfica
 
+## Especificação
     O trabalho deve ser desenvolvido em duplas.
         Parte da entrega do trabalho final de FCG será através do Git (hosting no Github). Assim, o professor poderá colaborar através de revisão de código (dado um commit específico), pull requests, etc., caso a dupla precise de alguma ajuda durante o desenvolvimento do trabalho.
         Até o dia 8 de novembro de 2024, preencha o formulário do link abaixo informando os integrantes de sua dupla e uma breve descrição de qual será a aplicação gráfica desenvolvida, além de outras informações sobre a entrega do trabalho final. O formulário deve ser preenchido por somente um dos integrantes da dupla.
@@ -31,66 +32,93 @@
 A sua aplicação deve incluir implementação dos seguintes conceitos de Computação Gráfica:
 
 - [ ]    Objetos virtuais representados através de malhas poligonais complexas (malhas de triângulos).
-	        No mínimo sua aplicação deve incluir um modelo geométrico da complexidade igual ou maior que o modelo "cow.obj" disponível neste link.
-	        Para carregar este (e outros) modelos geométricos no formato OBJ, você pode utilizar bibliotecas existentes (por exemplo: tinyobjloader (C++) e tinyobjloader (C)).
-	        Quanto maior a variedade de modelos geométricos, melhor. Veja a seção "Modelos 3D e Texturas Disponíveis na Web" na página principal de nosso Moodle para uma lista de locais onde você pode obter modelos 3D.
-
+- No mínimo sua aplicação deve incluir um modelo geométrico da complexidade igual ou maior que o modelo "cow.obj" disponível neste link.
+- Para carregar este (e outros) modelos geométricos no formato OBJ, você pode utilizar bibliotecas existentes (por exemplo: tinyobjloader (C++) e tinyobjloader (C)).
+- Quanto maior a variedade de modelos geométricos, melhor. Veja a seção "Modelos 3D e Texturas Disponíveis na Web" na página principal de nosso Moodle para uma lista de locais onde você pode obter modelos 3D.
+	- [ ] Incluir obj do carro principal
+		
 - [ ]    Transformações geométricas de objetos virtuais.
-	        Através da interação com o teclado e/ou mouse, o usuário deve poder controlar transformações geométricas aplicadas aos objetos virtuais (não somente controle da câmera).
+- Através da interação com o teclado e/ou mouse, o usuário deve poder controlar transformações geométricas aplicadas aos objetos virtuais (não somente controle da câmera).
+	- [ ] Usar as teclas W, A, S, D para movimentar o carro nas respectivas direções
+		- [ ] Definir velocidade ideal, etc ...
+	- [ ] Usar a tecla Space para puxar o freio de mão (implementação em conjunto com curvas de bézier, definir algo visual para usuário ver enquanto está no drift)  		
 
 - [ ]    Controle de câmeras virtuais.
-	        No mínimo sua aplicação deve implementar uma câmera look-at e uma câmera livre, conforme praticamos no Laboratório 2.
+- No mínimo sua aplicação deve implementar uma câmera look-at e uma câmera livre, conforme praticamos no Laboratório 2.
+	- [ ] Implementar camera look-at 3a pessoa atrás do carro
+	- [ ] Implementar camera livre que "pausa o jogo" quando acionada (guarda o estado atual do jogo naquele dado momento)
 
 - [ ]    No mínimo um objeto virtual deve ser copiado com duas ou mais instâncias, isto é, utilizando duas ou mais Model matrix aplicadas ao mesmo conjunto de vértices.
-	        Como exemplo, veja o código do Laboratório 2 e Laboratório 3, onde o mesmo modelo geométrico (cubo) é utilizado para desenhar todas as partes do boneco, e somente as matrizes de modelagem (Model matrix) são alteradas para desenhar cada cópia do cubo.
+- Como exemplo, veja o código do Laboratório 2 e Laboratório 3, onde o mesmo modelo geométrico (cubo) é utilizado para desenhar todas as partes do boneco, e somente as matrizes de modelagem (Model matrix) são alteradas para desenhar cada cópia do cubo.
+	- [ ] Colocar bônus de velocidade nas extremidades da curva
 
 - [ ]    Testes de intersecção entre objetos virtuais.
-	        No mínimo sua aplicação deve utilizar três tipos de teste de intersecção (por exemplo, um teste cubo-cubo, um teste cubo-plano, e um teste ponto-esfera).
-	        Estes testes devem ter algum propósito dentro da lógica de sua aplicação.
-	        Por exemplo, em um jogo de corrida, o modelo virtual de um carro não pode atravessar a parede, e para tanto é necessário testar a intersecção entre estes dois objetos de modo a evitar esta intersecção.
-	        Os testes de colisão devem ser implementados em um arquivo à parte, nomeado "collisions.cpp".
+- No mínimo sua aplicação deve utilizar três tipos de teste de intersecção (por exemplo, um teste cubo-cubo, um teste cubo-plano, e um teste ponto-esfera).
+- Estes testes devem ter algum propósito dentro da lógica de sua aplicação.
+- Por exemplo, em um jogo de corrida, o modelo virtual de um carro não pode atravessar a parede, e para tanto é necessário testar a intersecção entre estes dois objetos de modo a evitar esta intersecção.
+- Os testes de colisão devem ser implementados em um arquivo à parte, nomeado "collisions.cpp".
+	- [ ] Intersecção do carro com o terreno e com "parede" de chegada (cubo-plano)
+			- [ ] Se está no drift e sai da pista deixa de pontuar
+	- [ ] Intersecção do carro com o objeto bônus (cubo-esfera)
+		- [ ] Se está no drift e colide com objeto bônus ganha multiplicador de pontuação
+	- [ ] Intersecção do carro com árvore (cubo-cubo)
+		- [ ] Se carro colide com árvore pontuação zera/desconta
 
 - [ ]    Modelos de iluminação de objetos geométricos.
-	        No mínimo sua aplicação deve incluir objetos com os seguintes modelos de iluminação: difusa (Lambert) e Blinn-Phong.
-        	No mínimo sua aplicação deve incluir objetos com os seguintes modelos de interpolação para iluminação:
-	        No mínimo um objeto com modelo de Gouraud: o modelo de iluminação é avaliado para cada vértice usando suas normais, gerando uma cor, a qual é interpolada para cada pixel durante a rasterização.
-	        No mínimo um objeto com modelo de Phong: as normais de cada vértice são interpoladas para cada pixel durante a rasterização, e o modelo de iluminação é avaliado para cada pixel, utilizando estas normais interpoladas.
+- No mínimo sua aplicação deve incluir objetos com os seguintes modelos de iluminação: difusa (Lambert) e Blinn-Phong.
+- No mínimo sua aplicação deve incluir objetos com os seguintes modelos de interpolação para iluminação:
+	- No mínimo um objeto com modelo de Gouraud: o modelo de iluminação é avaliado para cada vértice usando suas normais, gerando uma cor, a qual é interpolada para cada pixel durante a rasterização.
+	- No mínimo um objeto com modelo de Phong: as normais de cada vértice são interpoladas para cada pixel durante a rasterização, e o modelo de iluminação é avaliado para cada pixel, utilizando estas normais interpoladas.
+	- [ ] Definir quais objetos terão cada iluminação: **(difusa (Lambert) | Blinn-Phong | Gouraud | Phong)**
+		- [ ] Implementar lógica e visualização fonte de luz Sol 
+		- [ ] Carro ()
+		- [ ] Objeto Bônus ()
+		- [ ] "Parede" translúcida de chegada ()
 
 - [ ]    Mapeamento de texturas.
-	        TODOS objetos virtuais de sua aplicação devem ter suas cores definidas através de texturas representadas por imagens (no mínimo três imagens distintas).
-	        Imagens de texturas "esticadas" de maneira não natural receberão desconto de pontuação.
+- TODOS objetos virtuais de sua aplicação devem ter suas cores definidas através de texturas representadas por imagens (no mínimo três imagens distintas).
+- Imagens de texturas "esticadas" de maneira não natural receberão desconto de pontuação.
+	- [ ] Textura da pista
+		- [ ] Textura do terreno
+		- [ ] Textura do objeto bônus
 
 - [ ]    Curvas de Bézier.
-	        No mínimo um objeto virtual de sua aplicação deve ter sua movimentação definida através de uma curva de Bézier cúbica. O objeto deve se movimentar de forma suave ao longo do espaço em um caminho curvo (não reto).
-
+- No mínimo um objeto virtual de sua aplicação deve ter sua movimentação definida através de uma curva de Bézier cúbica. O objeto deve se movimentar de forma suave ao longo do espaço em um caminho curvo (não reto).
+	- [ ] Modelar a pista
+			- [ ] Definir movimentação do drift
 - [ ]    Animação de Movimento baseada no tempo.
-                Todas as movimentações de objetos (incluindo da câmera) devem ser computadas baseado no tempo (isto é, movimentações devem ocorrer sempre na mesma velocidade independente da velocidade da CPU onde o programa está sendo executado).
+- Todas as movimentações de objetos (incluindo da câmera) devem ser computadas baseado no tempo (isto é, movimentações devem ocorrer sempre na mesma velocidade independente da velocidade da CPU onde o programa está sendo executado).
+	- [ ] Não preciso dizer
 
-	|-----------------------------------------------------+-----------|
-	| Critérios Técnicos                                  | Pontuação |
-	|-----------------------------------------------------+-----------|
-	| Malhas poligonais complexas                         |           |
-	| Transformações geométricas controladas pelo usuário |           |
-	| Câmera livre e câmera look-at                       |           |
-	| Instâncias de objetos                               |           |
-	| Três tipos de testes de intersecção                 |           |
-	| Modelos de Iluminação Difusa e Blinn-Phong          |           |
-	| Modelos de Interpolação de Phong e Gouraud          |           |
-	| Mapeamento de texturas em todos os objetos          |           |
-	| Movimentação com curva Bézier cúbica                |           |
-	| Animações baseadas no tempo ($\Delta t$)            |           |
-	|-----------------------------------------------------+-----------|
+OPCIONAIS (ordem de implementação):
+- [ ] Drift deixar marcas de pneu, fumaça ...
+- [ ] Som do carro de acordo com a aceleração
+
+|-----------------------------------------------------+-----------|
+| Critérios Técnicos                                  | Pontuação |
+|-----------------------------------------------------+-----------|
+| Malhas poligonais complexas                         |           |
+| Transformações geométricas controladas pelo usuário |           |
+| Câmera livre e câmera look-at                       |           |
+| Instâncias de objetos                               |           |
+| Três tipos de testes de intersecção                 |           |
+| Modelos de Iluminação Difusa e Blinn-Phong          |           |
+| Modelos de Interpolação de Phong e Gouraud          |           |
+| Mapeamento de texturas em todos os objetos          |           |
+| Movimentação com curva Bézier cúbica                |           |
+| Animações baseadas no tempo ($\Delta t$)            |           |
+|-----------------------------------------------------+-----------|
 
 
-	|----------------------------------------------------------------------------+-----------|
-	| Critérios de Participação                                                  | Pontuação |
-	|----------------------------------------------------------------------------+-----------|
-	| Entrega de acordo com a especificação (Código, Binário, Relatório, Vídeo)  |           |
-	| Qualidade do Relatório                                                     |           |
-	| Qualidade da apresentação final                                            |           |
-	| Apresentação parcial no Lab 6 e 7 (nota individual)                        |           |
-	| Participação na apresentação final (nota individual)                       |           |
-	| Participação no desenvolvimento do código                                  |           |
-	|   de acordo com o histórico do github (nota individual)                    |           |
-	|----------------------------------------------------------------------------+-----------|
+|----------------------------------------------------------------------------+-----------|
+| Critérios de Participação                                                  | Pontuação |
+|----------------------------------------------------------------------------+-----------|
+| Entrega de acordo com a especificação (Código, Binário, Relatório, Vídeo)  |           |
+| Qualidade do Relatório                                                     |           |
+| Qualidade da apresentação final                                            |           |
+| Apresentação parcial no Lab 6 e 7 (nota individual)                        |           |
+| Participação na apresentação final (nota individual)                       |           |
+| Participação no desenvolvimento do código                                  |           |
+|   de acordo com o histórico do github (nota individual)                    |           |
+|----------------------------------------------------------------------------+-----------|
 	
