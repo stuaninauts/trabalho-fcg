@@ -1,0 +1,26 @@
+[
+{
+  "directory": "/home/gustavo/ufrgs/fcg/trabalho-fcg/build",
+  "command": "/usr/bin/g++  -I/home/gustavo/ufrgs/fcg/trabalho-fcg/include -g -std=c++11 -Wall -Wno-unused-function -o CMakeFiles/main.dir/src/main.cpp.o -c /home/gustavo/ufrgs/fcg/trabalho-fcg/src/main.cpp",
+  "file": "/home/gustavo/ufrgs/fcg/trabalho-fcg/src/main.cpp",
+  "output": "CMakeFiles/main.dir/src/main.cpp.o"
+},
+{
+  "directory": "/home/gustavo/ufrgs/fcg/trabalho-fcg/build",
+  "command": "/usr/bin/g++  -I/home/gustavo/ufrgs/fcg/trabalho-fcg/include -g -std=c++11 -Wall -Wno-unused-function -o CMakeFiles/main.dir/src/textrendering.cpp.o -c /home/gustavo/ufrgs/fcg/trabalho-fcg/src/textrendering.cpp",
+  "file": "/home/gustavo/ufrgs/fcg/trabalho-fcg/src/textrendering.cpp",
+  "output": "CMakeFiles/main.dir/src/textrendering.cpp.o"
+},
+{
+  "directory": "/home/gustavo/ufrgs/fcg/trabalho-fcg/build",
+  "command": "/usr/bin/g++  -I/home/gustavo/ufrgs/fcg/trabalho-fcg/include -g -std=c++11 -Wall -Wno-unused-function -o CMakeFiles/main.dir/src/tiny_obj_loader.cpp.o -c /home/gustavo/ufrgs/fcg/trabalho-fcg/src/tiny_obj_loader.cpp",
+  "file": "/home/gustavo/ufrgs/fcg/trabalho-fcg/src/tiny_obj_loader.cpp",
+  "output": "CMakeFiles/main.dir/src/tiny_obj_loader.cpp.o"
+},
+{
+  "directory": "/home/gustavo/ufrgs/fcg/trabalho-fcg/build",
+  "command": "/usr/bin/gcc  -I/home/gustavo/ufrgs/fcg/trabalho-fcg/include -g -Wall -Wno-unused-function -o CMakeFiles/main.dir/src/glad.c.o -c /home/gustavo/ufrgs/fcg/trabalho-fcg/src/glad.c",
+  "file": "/home/gustavo/ufrgs/fcg/trabalho-fcg/src/glad.c",
+  "output": "CMakeFiles/main.dir/src/glad.c.o"
+}
+]

@@ -1,0 +1,4 @@
+/home/gustavo/ufrgs/fcg/trabalho-fcg/build/CMakeFiles/main.dir
+/home/gustavo/ufrgs/fcg/trabalho-fcg/build/CMakeFiles/run.dir
+/home/gustavo/ufrgs/fcg/trabalho-fcg/build/CMakeFiles/edit_cache.dir
+/home/gustavo/ufrgs/fcg/trabalho-fcg/build/CMakeFiles/rebuild_cache.dir
