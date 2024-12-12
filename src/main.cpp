@@ -176,7 +176,7 @@ void TextRendering_PrintMatrixVectorProductDivW(GLFWwindow* window, glm::mat4 M,
 // outras informações do programa. Definidas após main().
 void TextRendering_ShowModelViewProjection(GLFWwindow* window, glm::mat4 projection, glm::mat4 view, glm::mat4 model, glm::vec4 p_model);
 void TextRendering_ShowEulerAngles(GLFWwindow* window);
-void TextRendering_ShowProjection(GLFWwindow* window);
+void TextRendering_ShowVelocity(GLFWwindow* window);
 void TextRendering_ShowFramesPerSecond(GLFWwindow* window);
 
 // Funções callback para comunicação com o sistema operacional e interação do
@@ -511,8 +511,8 @@ int main(int argc, char* argv[])
         // terceiro cubo.
         TextRendering_ShowEulerAngles(window);
 
-        // Imprimimos na informação sobre a matriz de projeção sendo utilizada.
-        TextRendering_ShowProjection(window);
+
+        TextRendering_ShowVelocity(window);
 
         // Imprimimos na tela informação sobre o número de quadros renderizados
         // por segundo (frames per second).
@@ -1348,14 +1348,21 @@ void TextRendering_ShowEulerAngles(GLFWwindow* window)
     TextRendering_PrintString(window, buffer, -1.0f+pad/10, -1.0f+2*pad/10, 1.0f);
 }
 
-// Escrevemos na tela qual matriz de projeção está sendo utilizada.
-void TextRendering_ShowProjection(GLFWwindow* window)
+// Mostra velocidade atual do carro
+void TextRendering_ShowVelocity(GLFWwindow* window)
 {
-    if ( !g_ShowInfoText )
+    if (!g_ShowInfoText)
         return;
 
     float lineheight = TextRendering_LineHeight(window);
     float charwidth = TextRendering_CharWidth(window);
+
+    char buffer[50];
+    snprintf(buffer, 50, "Speed: %.2f", car.speed);
+    TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 2 * lineheight, 1.0f);
+
+    snprintf(buffer, 50, "Acceleration: %.2f", car.acceleration);
+    TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 3 * lineheight, 1.0f);
 }
 
 // Escrevemos na tela o número de quadros renderizados por segundo (frames per
