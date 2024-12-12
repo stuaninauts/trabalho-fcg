@@ -259,6 +259,16 @@ bool key_S_pressed = false;
 bool key_A_pressed = false;
 bool key_D_pressed = false;
 
+// Movimentacao da camera livre
+bool key_UP_pressed = false;
+bool key_DOWN_pressed = false;
+bool key_LEFT_pressed = false;
+bool key_RIGHT_pressed = false;
+
+// Toggle do tipo de camera
+// true para look at, false para livre
+bool type_camera_look_at = true;
+float camera_speed = 5.0f;
 // Camera look at: valor inicial de offset em relação ao carro
 glm::vec3 camera_offset(0.0f, 3.0f, 5.0f);
 
@@ -425,12 +435,38 @@ int main(int argc, char* argv[])
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
         // Camera look at: vetor de posicao relacionado a posição do carro.
         // Quando implementar a curva do carro vai precisar trocar.
-        glm::vec4 camera_position_c  = glm::vec4(car.carPosition.x + camera_offset.x, 
+        glm::vec4 camera_position_c;
+        glm::vec4 camera_lookat_l;
+        glm::vec4 camera_view_vector;
+        glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
+        if (type_camera_look_at) {
+            camera_lookat_l  = glm::vec4(car.carPosition.x, car.carPosition.y, car.carPosition.z, 1.0f); // Camera look-at
+            camera_position_c  = glm::vec4(car.carPosition.x + camera_offset.x, 
                                                  car.carPosition.y + camera_offset.y, 
                                                  car.carPosition.z + camera_offset.z, 1.0f); // Ponto "c", centro da câmera
-        glm::vec4 camera_lookat_l    = glm::vec4(car.carPosition.x, car.carPosition.y, car.carPosition.z, 1.0f); // Camera look-at
-        glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
-        glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
+            camera_view_vector = camera_lookat_l - camera_position_c; 
+        }
+        else {
+            camera_view_vector = -glm::vec4(x, y, z, 0.0f);
+            glm::vec4 vetor_w  = -camera_view_vector;
+            glm::vec4 vetor_u  = crossproduct(camera_up_vector, vetor_w);
+            // Realiza movimentação de objetos
+            if (key_UP_pressed)
+                // Movimenta câmera para frente
+                camera_position_c += -vetor_w * camera_speed * deltaTime;
+            if (key_DOWN_pressed)
+                // Movimenta câmera para trás
+                camera_position_c += vetor_w * camera_speed * deltaTime;    
+            if (key_RIGHT_pressed)
+                // Movimenta câmera para direita
+                camera_position_c += vetor_u * camera_speed * deltaTime;
+            if (key_LEFT_pressed)
+                // Movimenta câmera para esquerda
+                camera_position_c += -vetor_u * camera_speed * deltaTime;
+        }
+
+        
+
 
         // Computamos a matriz "View" utilizando os parâmetros da câmera para
         // definir o sistema de coordenadas da câmera.  Veja slides 2-14, 184-190 e 236-242 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
@@ -1224,6 +1260,53 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
             ;
     }
 
+    // Movimentacao da camera livre
+    if (key == GLFW_KEY_UP)
+    {
+        if (action == GLFW_PRESS)
+            key_UP_pressed = true;
+
+        else if (action == GLFW_RELEASE)
+            key_UP_pressed = false;
+
+        else if (action == GLFW_REPEAT)
+            ;
+    }
+    if (key == GLFW_KEY_DOWN)
+    {
+        if (action == GLFW_PRESS)
+            key_DOWN_pressed = true;
+
+        else if (action == GLFW_RELEASE)
+            key_DOWN_pressed = false;
+
+        else if (action == GLFW_REPEAT)
+            ;
+    }
+    if (key == GLFW_KEY_LEFT)
+    {
+        if (action == GLFW_PRESS)
+            key_LEFT_pressed = true;
+
+        else if (action == GLFW_RELEASE)
+            key_LEFT_pressed = false;
+
+        else if (action == GLFW_REPEAT)
+            ;
+    }
+    if (key == GLFW_KEY_RIGHT)
+    {
+        if (action == GLFW_PRESS)
+            key_RIGHT_pressed = true;
+
+        else if (action == GLFW_RELEASE)
+            key_RIGHT_pressed = false;
+
+        else if (action == GLFW_REPEAT)
+            ;
+    }
+
+
     if (key == GLFW_KEY_X && action == GLFW_PRESS)
     {
         g_AngleX += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
@@ -1262,6 +1345,11 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         LoadShadersFromFiles();
         fprintf(stdout,"Shaders recarregados!\n");
         fflush(stdout);
+    }
+
+    if (key == GLFW_KEY_L && action == GLFW_PRESS)
+    {
+        type_camera_look_at = !type_camera_look_at;
     }
 }
 
