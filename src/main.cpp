@@ -328,10 +328,31 @@ int main(int argc, char* argv[])
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
+    
+    // Movimentação do carro: posição inicial e velocidade
+    glm::vec3 carPosition(0.0f, -1.0f, 0.0f); // Initial position of the car
+    float carSpeed = 5.0f; // Movement speed (units per second)
 
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
+        // Movimentação do carro: tempo
+        static double previousTime = glfwGetTime();
+        double currentTime = glfwGetTime();
+        float deltaTime = static_cast<float>(currentTime - previousTime);
+        previousTime = currentTime;
+
+        // Movimentação do carro: teclas WASD
+        if (key_W_pressed)
+            carPosition.z -= carSpeed * deltaTime; // Move forward
+        if (key_S_pressed)
+            carPosition.z += carSpeed * deltaTime; // Move backward
+        if (key_A_pressed)
+            carPosition.x -= carSpeed * deltaTime; // Move left
+        if (key_D_pressed)
+            carPosition.x += carSpeed * deltaTime; // Move right
+        
+        
         // Aqui executamos as operações de renderização
 
         // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor é
@@ -376,7 +397,7 @@ int main(int argc, char* argv[])
         // Note que, no sistema de coordenadas da câmera, os planos near e far
         // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
         float nearplane = -0.1f;  // Posição do "near plane"
-        float farplane  = -10.0f; // Posição do "far plane"
+        float farplane  = -1000.0f; // Posição do "far plane"
 
         if (g_UsePerspectiveProjection)
         {
@@ -428,16 +449,19 @@ int main(int argc, char* argv[])
         DrawVirtualObject("the_bunny");
 
         model = Matrix_Translate(0.0f, -1.0f, 0.0f)
-              * Matrix_Scale(2.0f, 1.0f, 2.0f);
+              * Matrix_Scale(200.0f, 1.0f, 200.0f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
-        model = Matrix_Translate(2.0f,-1.0f,0.0f)
-                * Matrix_Rotate_X(-PI/2);
+        // Desenhamos o modelo do carro
+        model = Matrix_Translate(carPosition.x, carPosition.y, carPosition.z)
+                * Matrix_Rotate_X(-PI/2)
+                * Matrix_Rotate_Z(-PI/2);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, SPHERE);
         DrawVirtualObject("the_car");
+
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
         TextRendering_ShowEulerAngles(window);
@@ -1501,4 +1525,3 @@ void PrintObjModelInfo(ObjModel* model)
 
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
 // vim: set spell spelllang=pt_br :
-
