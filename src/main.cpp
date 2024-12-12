@@ -106,6 +106,43 @@ struct ObjModel
     }
 };
 
+struct Car
+{
+    // Movimentação do carro: posição inicial e velocidade
+    glm::vec3 carPosition; // Posicao inicial do carro
+    glm::vec3 carVelocity; // Sem velocidade inicial
+    float speed; // Velocidade atual do carro
+    float acceleration; // Aceleração (ou RPM) do carro
+    float max_speed; // Velocidade máxima do carro
+    float acceleration_rate; // Taxa de aceleração
+    float deceleration_rate; // Taxa de desaceleração
+
+    // Construtor
+    Car() 
+        : carPosition(0.0f, -1.0f, 0.0f), 
+          carVelocity(0.0f, 0.0f, 0.0f), 
+          speed(0.0f), 
+          acceleration(0.0f), 
+          max_speed(100.0f), 
+          acceleration_rate(10.0f), 
+          deceleration_rate(2.0f) 
+    {}
+};
+
+void PrintCarAttributes(const Car& car)
+{
+    printf("Car Attributes:\n");
+    printf("Position: (%f, %f, %f)\n", car.carPosition.x, car.carPosition.y, car.carPosition.z);
+    printf("Velocity: (%f, %f, %f)\n", car.carVelocity.x, car.carVelocity.y, car.carVelocity.z);
+    printf("Speed: %f\n", car.speed);
+    printf("Acceleration: %f\n", car.acceleration);
+    printf("Max Speed: %f\n", car.max_speed);
+    printf("Acceleration Rate: %f\n", car.acceleration_rate);
+    printf("Deceleration Rate: %f\n", car.deceleration_rate);
+}
+
+
+Car car;
 
 // Declaração de funções utilizadas para pilha de matrizes de modelagem.
 void PushMatrix(glm::mat4 M);
@@ -150,6 +187,9 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+
+// Movimentacao do carro
+void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed, bool key_A_pressed, bool key_D_pressed, float deltaTime);
 
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
@@ -251,7 +291,7 @@ int main(int argc, char* argv[])
     // Criamos uma janela do sistema operacional, com 800 colunas e 600 linhas
     // de pixels, e com título "INF01047 ...".
     GLFWwindow* window;
-    window = glfwCreateWindow(800, 600, "INF01047 - 00342016 - Gustavo Zen Pretto", NULL, NULL);
+    window = glfwCreateWindow(800, 600, "Necessidade por Velocidade (UFRGS Edition)", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -350,17 +390,10 @@ int main(int argc, char* argv[])
         float deltaTime = static_cast<float>(currentTime - previousTime);
         previousTime = currentTime;
 
-        // Movimentação do carro: teclas WASD
-        if (key_W_pressed)
-            carPosition.z -= carSpeed * deltaTime; // Move forward
-        if (key_S_pressed)
-            carPosition.z += carSpeed * deltaTime; // Move backward
-        if (key_A_pressed)
-            carPosition.x -= carSpeed * deltaTime; // Move left
-        if (key_D_pressed)
-            carPosition.x += carSpeed * deltaTime; // Move right
-        
-        
+        // Movimentação do carro: atualiza velocidade
+        UpdateCarSpeedAndPosition(car, key_W_pressed, key_S_pressed, key_A_pressed, key_D_pressed, deltaTime);        
+
+
         // Aqui executamos as operações de renderização
 
         // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor é
@@ -1529,6 +1562,55 @@ void PrintObjModelInfo(ObjModel* model)
     printf("\n");
   }
 }
+
+// Lógica para atualização da velocidade e posição do carro
+void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed, bool key_A_pressed, bool key_D_pressed, float deltaTime)
+{
+        if (key_W_pressed)
+    {
+        // Aumenta a aceleração
+        car.acceleration += car.acceleration_rate * deltaTime;
+        if (car.acceleration > car.max_speed)
+        {
+            car.acceleration = car.max_speed;
+        }
+    }
+    else if (key_S_pressed)
+    {
+        // Reduz a aceleração (anda para trás)
+        car.acceleration -= car.acceleration_rate * deltaTime;
+        if (car.acceleration < -car.max_speed)
+        {
+            car.acceleration = -car.max_speed;
+        }
+    }
+    else
+    {
+        // Gradativamente reduz a aceleração (freio natural)
+        if (car.acceleration > 0)
+        {
+            car.acceleration -= car.deceleration_rate * deltaTime;
+            if (car.acceleration < 0)
+                car.acceleration = 0;
+        }
+        else if (car.acceleration < 0)
+        {
+            car.acceleration += car.deceleration_rate * deltaTime;
+            if (car.acceleration > 0)
+                car.acceleration = 0;
+        }
+    }
+
+    // A velocidade absoluta é a magnitude da aceleração
+    car.speed = std::abs(car.acceleration);
+
+    // Atualiza a velocidade do carro (com direção) e a posição
+    car.carVelocity = glm::vec3(0.0f, 0.0f, car.acceleration);
+    car.carPosition -= car.carVelocity * deltaTime;
+    
+}
+
+
 
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
 // vim: set spell spelllang=pt_br :
