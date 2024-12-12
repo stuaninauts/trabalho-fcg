@@ -222,6 +222,9 @@ bool key_S_pressed = false;
 bool key_A_pressed = false;
 bool key_D_pressed = false;
 
+// Camera look at: valor inicial de offset em relação ao carro
+glm::vec3 camera_offset(0.0f, 3.0f, 5.0f);
+
 int main(int argc, char* argv[])
 {
     // Inicializamos a biblioteca GLFW, utilizada para criar uma janela do
@@ -382,8 +385,12 @@ int main(int argc, char* argv[])
 
         // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-        glm::vec4 camera_position_c  = glm::vec4(x,y,z,1.0f); // Ponto "c", centro da câmera
-        glm::vec4 camera_lookat_l    = glm::vec4(0.0f,0.0f,0.0f,1.0f); // Ponto "l", para onde a câmera (look-at) estará sempre olhando
+        // Camera look at: vetor de posicao relacionado a posição do carro.
+        // Quando implementar a curva do carro vai precisar trocar.
+        glm::vec4 camera_position_c  = glm::vec4(carPosition.x + camera_offset.x, 
+                                                 carPosition.y + camera_offset.y, 
+                                                 carPosition.z + camera_offset.z, 1.0f); // Ponto "c", centro da câmera
+        glm::vec4 camera_lookat_l    = glm::vec4(carPosition.x, carPosition.y, carPosition.z, 1.0f); // Camera look-at
         glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
 
@@ -1081,16 +1088,28 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
     // Atualizamos a distância da câmera para a origem utilizando a
     // movimentação da "rodinha", simulando um ZOOM.
-    g_CameraDistance -= 0.1f*yoffset;
+    //g_CameraDistance -= 0.1f*yoffset;
 
     // Uma câmera look-at nunca pode estar exatamente "em cima" do ponto para
     // onde ela está olhando, pois isto gera problemas de divisão por zero na
     // definição do sistema de coordenadas da câmera. Isto é, a variável abaixo
     // nunca pode ser zero. Versões anteriores deste código possuíam este bug,
     // o qual foi detectado pelo aluno Vinicius Fraga (2017/2).
-    const float verysmallnumber = std::numeric_limits<float>::epsilon();
-    if (g_CameraDistance < verysmallnumber)
-        g_CameraDistance = verysmallnumber;
+    //const float verysmallnumber = std::numeric_limits<float>::epsilon();
+    
+    float scrollSensitivity = 1.0f; // Camera look at: usar scroll para aumentar/diminuir distancia
+    camera_offset.z -= yoffset * scrollSensitivity;
+    //if (g_CameraDistance < verysmallnumber)
+    //    g_CameraDistance = verysmallnumber;
+    if (camera_offset.z < 5.0f)
+    {
+        camera_offset.z = 5.0f;
+    }
+    if (camera_offset.z > 12.0f)
+    {
+        camera_offset.z = 12.0f;
+    }
+
 }
 
 // Definição da função que será chamada sempre que o usuário pressionar alguma
