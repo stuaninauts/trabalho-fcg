@@ -425,10 +425,10 @@ int main(int argc, char* argv[])
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
         // Camera look at: vetor de posicao relacionado a posição do carro.
         // Quando implementar a curva do carro vai precisar trocar.
-        glm::vec4 camera_position_c  = glm::vec4(carPosition.x + camera_offset.x, 
-                                                 carPosition.y + camera_offset.y, 
-                                                 carPosition.z + camera_offset.z, 1.0f); // Ponto "c", centro da câmera
-        glm::vec4 camera_lookat_l    = glm::vec4(carPosition.x, carPosition.y, carPosition.z, 1.0f); // Camera look-at
+        glm::vec4 camera_position_c  = glm::vec4(car.carPosition.x + camera_offset.x, 
+                                                 car.carPosition.y + camera_offset.y, 
+                                                 car.carPosition.z + camera_offset.z, 1.0f); // Ponto "c", centro da câmera
+        glm::vec4 camera_lookat_l    = glm::vec4(car.carPosition.x, car.carPosition.y, car.carPosition.z, 1.0f); // Camera look-at
         glm::vec4 camera_view_vector = camera_lookat_l - camera_position_c; // Vetor "view", sentido para onde a câmera está virada
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
 
@@ -486,7 +486,7 @@ int main(int argc, char* argv[])
         DrawVirtualObject("the_plane");
 
         // Desenhamos o modelo do carro
-        model = Matrix_Translate(carPosition.x, carPosition.y, carPosition.z)
+        model = Matrix_Translate(car.carPosition.x, car.carPosition.y, car.carPosition.z)
                 * Matrix_Rotate_X(-PI/2)
                 * Matrix_Rotate_Z(-PI/2);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
