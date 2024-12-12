@@ -120,6 +120,7 @@ struct Car
     float speed; // Velocidade atual do carro
     float acceleration; // Aceleração (ou RPM) do carro
     float max_speed; // Velocidade máxima do carro
+    float max_acceleration; // Aceleracao Máxima do carro
     float acceleration_rate; // Taxa de aceleração
     float deceleration_rate; // Taxa de desaceleração
 
@@ -130,6 +131,7 @@ struct Car
           speed(0.0f), 
           acceleration(0.0f), 
           max_speed(100.0f), 
+          max_acceleration(20.0f),
           acceleration_rate(10.0f), 
           deceleration_rate(2.0f) 
     {}
@@ -1678,48 +1680,56 @@ void PrintObjModelInfo(ObjModel* model)
 // Lógica para atualização da velocidade e posição do carro
 void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed, bool key_A_pressed, bool key_D_pressed, float deltaTime)
 {
-        if (key_W_pressed)
+    if (key_W_pressed)
     {
         // Aumenta a aceleração
-        car.acceleration += car.acceleration_rate * deltaTime;
-        if (car.acceleration > car.max_speed)
-        {
-            car.acceleration = car.max_speed;
-        }
+        car.acceleration += car.acceleration_rate;
+        if (car.acceleration > car.max_acceleration)
+            car.acceleration = car.max_acceleration;
     }
     else if (key_S_pressed)
     {
         // Reduz a aceleração (anda para trás)
-        car.acceleration -= car.acceleration_rate * deltaTime;
-        if (car.acceleration < -car.max_speed)
-        {
-            car.acceleration = -car.max_speed;
-        }
+        car.acceleration -= car.acceleration_rate;
+        if (car.acceleration < -car.max_acceleration)
+            car.acceleration = -car.max_acceleration;
     }
-    else
+    else 
     {
         // Gradativamente reduz a aceleração (freio natural)
-        if (car.acceleration > 0)
+        if (car.carVelocity.z > 0)
         {
             negative_acceleration = false;
-            car.acceleration -= car.deceleration_rate * deltaTime;
-            if (car.acceleration < 0)
-                car.acceleration = 0;
+            car.acceleration = -car.deceleration_rate;
+
         }
-        else if (car.acceleration < 0)
+        else if (car.carVelocity.z > 0)
         {
-            negative_acceleration = true;
-            car.acceleration += car.deceleration_rate * deltaTime;
-            if (car.acceleration > 0)
-                car.acceleration = 0;
+            negative_acceleration = false;
+            car.acceleration = car.deceleration_rate;
+
         }
+        // else if (car.acceleration < 0)
+        // {
+        //     negative_acceleration = true;
+        //     car.acceleration += car.deceleration_rate * deltaTime;
+        //     if (car.acceleration > 0)
+        //         car.acceleration = 0;
+        // }
     }
 
-    // A velocidade absoluta é a magnitude da aceleração
-    car.speed = std::abs(car.acceleration);
+
+    float actual_speed = car.speed + car.acceleration;
+    if (actual_speed > car.max_speed)
+        actual_speed = car.max_speed;
+    else if (actual_speed < -car.max_speed)
+        actual_speed = -car.max_speed;
 
     // Atualiza a velocidade do carro (com direção) e a posição
-    car.carVelocity = glm::vec3(0.0f, 0.0f, car.acceleration);
+    car.carVelocity = glm::vec3(0.0f, 0.0f, actual_speed);
+
+    car.speed = std::abs(car.carVelocity.z);
+
     car.carPosition -= car.carVelocity * deltaTime;
     
 }
