@@ -507,21 +507,15 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(g_projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
-        #define SPHERE 0
+
         #define BUNNY  1
         #define PLANE  2
         #define CAR    3
         #define SUN    4
         #define CLOUD  5
 
-        // Desenhamos o modelo da esfera
-        model = Matrix_Translate(-1.0f,0.0f,0.0f);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, SPHERE);
-        DrawVirtualObject("the_sphere");
-
         // Desenhamos o modelo do coelho
-        model = Matrix_Translate(1.0f,0.0f,0.0f)
+        model = Matrix_Translate(4.0f,0.0f,-6.0f)
               * Matrix_Rotate_Z(g_AngleZ)
               * Matrix_Rotate_Y(g_AngleY)
               * Matrix_Rotate_X(g_AngleX);
@@ -544,8 +538,8 @@ int main(int argc, char* argv[])
         DrawVirtualObject("the_car");
 
         // Desenhamos o modelo do sol
-        model = Matrix_Translate(0.0f, 3.0f, -5.0f)
-                * Matrix_Scale(0.05f, 0.05f, 0.05f);
+        model = Matrix_Translate(0.0f, .0f, -15.0f)
+                * Matrix_Scale(0.5f, 0.5f, 0.5f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, SUN);
         DrawVirtualObject("the_sun");
