@@ -216,6 +216,12 @@ GLint g_view_uniform;
 GLint g_projection_uniform;
 GLint g_object_id_uniform;
 
+// Movimentacao do carro
+bool key_W_pressed = false;
+bool key_S_pressed = false;
+bool key_A_pressed = false;
+bool key_D_pressed = false;
+
 int main(int argc, char* argv[])
 {
     // Inicializamos a biblioteca GLFW, utilizada para criar uma janela do
@@ -1088,6 +1094,54 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     //   Se apertar tecla shift+Z então g_AngleZ -= delta;
 
     float delta = PI / 16; // 22.5 graus, em radianos.
+
+    // Movimentacao do Carro
+    if (key == GLFW_KEY_W)
+    {
+        if (action == GLFW_PRESS)
+            key_W_pressed = true;
+
+        else if (action == GLFW_RELEASE)
+            key_W_pressed = false;
+
+        else if (action == GLFW_REPEAT)
+            ;
+    }
+
+    if (key == GLFW_KEY_S)
+    {
+        if (action == GLFW_PRESS)
+            key_S_pressed = true;
+
+        else if (action == GLFW_RELEASE)
+            key_S_pressed = false;
+
+        else if (action == GLFW_REPEAT)
+            ;
+    }
+
+    if (key == GLFW_KEY_A)
+    {
+        if (action == GLFW_PRESS)
+            key_A_pressed = true;
+
+        else if (action == GLFW_RELEASE)
+            key_A_pressed = false;
+
+        else if (action == GLFW_REPEAT)
+            ;
+    }
+        if (key == GLFW_KEY_D)
+    {
+        if (action == GLFW_PRESS)
+            key_D_pressed = true;
+
+        else if (action == GLFW_RELEASE)
+            key_D_pressed = false;
+
+        else if (action == GLFW_REPEAT)
+            ;
+    }
 
     if (key == GLFW_KEY_X && action == GLFW_PRESS)
     {
