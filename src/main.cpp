@@ -48,6 +48,12 @@
 
 #define PI 3.141592f
 
+// Camera look-at: valores maximos e minimos da camera em relação a z/y
+#define MIN_DISTANCE_LOOK_AT_Z 3.0f
+#define MAX_DISTANCE_LOOK_AT_Z 8.0f
+#define MIN_DISTANCE_LOOK_AT_Y 0.8f
+#define MAX_DISTANCE_LOOK_AT_Y 3.0f
+
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
 struct ObjModel
@@ -259,8 +265,17 @@ bool key_S_pressed = false;
 bool key_A_pressed = false;
 bool key_D_pressed = false;
 
+// Camera look-at
+bool negative_acceleration = false;
+
+
+// Camera look-at: define fator de progressão ao usar scroll para zoom
+float delta_look_at_y = MAX_DISTANCE_LOOK_AT_Y - MIN_DISTANCE_LOOK_AT_Y; 
+float delta_look_at_z = MAX_DISTANCE_LOOK_AT_Z - MIN_DISTANCE_LOOK_AT_Z;
+float relation_delta_yz = delta_look_at_y / delta_look_at_z;
+
 // Camera look at: valor inicial de offset em relação ao carro
-glm::vec3 camera_offset(0.0f, 3.0f, 5.0f);
+glm::vec3 camera_offset(0.0f, MIN_DISTANCE_LOOK_AT_Y, MIN_DISTANCE_LOOK_AT_Z);
 
 int main(int argc, char* argv[])
 {
@@ -425,6 +440,7 @@ int main(int argc, char* argv[])
         // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
         // Camera look at: vetor de posicao relacionado a posição do carro.
         // Quando implementar a curva do carro vai precisar trocar.
+
         glm::vec4 camera_position_c  = glm::vec4(car.carPosition.x + camera_offset.x, 
                                                  car.carPosition.y + camera_offset.y, 
                                                  car.carPosition.z + camera_offset.z, 1.0f); // Ponto "c", centro da câmera
@@ -1137,15 +1153,24 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset)
     
     float scrollSensitivity = 1.0f; // Camera look at: usar scroll para aumentar/diminuir distancia
     camera_offset.z -= yoffset * scrollSensitivity;
+    camera_offset.y -= yoffset * scrollSensitivity * relation_delta_yz;
     //if (g_CameraDistance < verysmallnumber)
     //    g_CameraDistance = verysmallnumber;
-    if (camera_offset.z < 5.0f)
+    if (camera_offset.z < MIN_DISTANCE_LOOK_AT_Z)
     {
-        camera_offset.z = 5.0f;
+        camera_offset.z = MIN_DISTANCE_LOOK_AT_Z;
     }
-    if (camera_offset.z > 12.0f)
+    if (camera_offset.z > MAX_DISTANCE_LOOK_AT_Z)
     {
-        camera_offset.z = 12.0f;
+        camera_offset.z = MAX_DISTANCE_LOOK_AT_Z;
+    }
+    if (camera_offset.y < MIN_DISTANCE_LOOK_AT_Y)
+    {
+        camera_offset.y = MIN_DISTANCE_LOOK_AT_Y;
+    }
+    if (camera_offset.y > MAX_DISTANCE_LOOK_AT_Y)
+    {
+        camera_offset.y = MAX_DISTANCE_LOOK_AT_Y;
     }
 
 }
@@ -1596,12 +1621,14 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
         // Gradativamente reduz a aceleração (freio natural)
         if (car.acceleration > 0)
         {
+            negative_acceleration = false;
             car.acceleration -= car.deceleration_rate * deltaTime;
             if (car.acceleration < 0)
                 car.acceleration = 0;
         }
         else if (car.acceleration < 0)
         {
+            negative_acceleration = true;
             car.acceleration += car.deceleration_rate * deltaTime;
             if (car.acceleration > 0)
                 car.acceleration = 0;
