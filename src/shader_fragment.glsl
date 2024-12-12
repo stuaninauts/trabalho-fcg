@@ -16,6 +16,9 @@ uniform mat4 projection;
 #define SPHERE 0
 #define BUNNY  1
 #define PLANE  2
+#define CAR    3
+#define SUN    4
+#define CLOUD  5
 uniform int object_id;
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
@@ -79,6 +82,30 @@ void main()
         Kd = vec3(0.2, 0.2, 0.2);
         Ks = vec3(0.3, 0.3, 0.3);
         Ka = vec3(0.0,0.0,0.0);
+        q = 20.0;
+    }
+    else if ( object_id == CAR )
+    {
+        // Propriedades espectrais do carro
+        Kd = vec3(1.0, 0.0, 0.0); // Diffuse color (red)
+        Ks = vec3(1.0, 0.0, 0.0); // Specular color (red)
+        Ka = vec3(0.1, 0.0, 0.0); // Ambient color (dim red)
+        q = 20.0;
+    }
+    else if ( object_id == SUN )
+    {
+        // Propriedades espectrais do plano
+        Kd = vec3(1.0, 1.0, 0.0); // Diffuse color (yellow)
+        Ks = vec3(1.0, 1.0, 0.0); // Specular color (yellow)
+        Ka = vec3(0.1, 0.1, 0.0); // Ambient color (dim yellow)
+        q = 20.0;
+    }
+    else if ( object_id == CLOUD )
+    {
+        // Propriedades espectrais da nuvem
+        Kd = vec3(1.0, 1.0, 1.0); // Diffuse color (white)
+        Ks = vec3(1.0, 1.0, 1.0); // Specular color (white)
+        Ka = vec3(0.1, 0.1, 0.1); // Ambient color (dim white)
         q = 20.0;
     }
     else // Objeto desconhecido = preto
