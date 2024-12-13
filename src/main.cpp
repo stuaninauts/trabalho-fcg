@@ -124,10 +124,11 @@ struct Car
     float max_acceleration; // Aceleracao Máxima do carro
     float acceleration_rate; // Taxa de aceleração
     float deceleration_rate; // Taxa de desaceleração
+    float front_wheel_angle;
 
     // Construtor
     Car() 
-        : carPosition(0.0f, -1.0f, 0.0f),  // Posicao inicial do carro
+        : carPosition(0.0f, -0.95f, 0.0f),  // Posicao inicial do carro
           carVelocity(0.0f, 0.0f, 0.0f), 
           carAcceleration(0.0f, 0.0f, 0.0f), 
           speed(0.0f), 
@@ -135,7 +136,8 @@ struct Car
           max_speed(100.0f), 
           max_acceleration(20.0f),
           acceleration_rate(10.0f), 
-          deceleration_rate(5.0f) 
+          deceleration_rate(5.0f),
+          front_wheel_angle(0.0f)
     {}
 };
 
@@ -197,6 +199,9 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
+
+// Desenho do carro
+void DrawCar();
 
 // Movimentacao do carro
 void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed, bool key_A_pressed, bool key_D_pressed, float deltaTime);
@@ -376,7 +381,7 @@ int main(int argc, char* argv[])
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
 
-    ObjModel carmodel("../../data/supramk4.obj");
+    ObjModel carmodel("../../data/supratunadov2.obj");
     ComputeNormals(&carmodel);
     BuildTrianglesAndAddToVirtualScene(&carmodel);
 
@@ -530,12 +535,13 @@ int main(int argc, char* argv[])
         DrawVirtualObject("the_plane");
 
         // Desenhamos o modelo do carro
-        model = Matrix_Translate(car.carPosition.x, car.carPosition.y, car.carPosition.z)
-                * Matrix_Rotate_X(-PI/2)
-                * Matrix_Rotate_Z(-PI/2);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, CAR);
-        DrawVirtualObject("the_car");
+        DrawCar();
+        // model = Matrix_Translate(car.carPosition.x, car.carPosition.y, car.carPosition.z)
+        //         * Matrix_Rotate_Y(-PI/2)
+        //         * Matrix_Rotate_Z(-PI/2);
+        // glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        // glUniform1i(g_object_id_uniform, CAR);
+        // DrawVirtualObject("the_car");
 
         // Desenhamos o modelo do sol
         model = Matrix_Translate(0.0f, .0f, -15.0f)
@@ -1675,6 +1681,58 @@ void PrintObjModelInfo(ObjModel* model)
     }
     printf("\n");
   }
+}
+
+void DrawCar()
+{
+    glm::mat4 model2 = Matrix_Translate(car.carPosition.x, car.carPosition.y, car.carPosition.z)
+                    * Matrix_Rotate_X(-PI/2)
+                    * Matrix_Rotate_Z(-PI/2);
+
+    glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model2));
+    glUniform1i(g_object_id_uniform, CAR);
+
+    // Desenhar cada parte do carro
+    DrawVirtualObject("obj1"); // parabarros dianteiros
+    DrawVirtualObject("obj2"); // defletor dianteiro
+    DrawVirtualObject("obj3"); // parachoque dianteiro
+    DrawVirtualObject("obj4"); // calotas (4)
+    DrawVirtualObject("obj5"); // logo tras
+    DrawVirtualObject("obj6"); // logo frente
+    DrawVirtualObject("obj7"); // parabrisa dianteiro
+    DrawVirtualObject("obj8"); // borracha em volta do parabrisa dianteiro
+    DrawVirtualObject("obj9"); // capo dianteiro
+    DrawVirtualObject("obj10"); // envoltura lanteras traseiras
+    DrawVirtualObject("obj11"); // lanteras traseiras
+    DrawVirtualObject("obj12"); // lanternas dianteiras
+    DrawVirtualObject("front_wheel_left"); // roda dianteira esquerda
+    DrawVirtualObject("obj14"); // escapamento
+    DrawVirtualObject("obj15"); // retrovisores
+    DrawVirtualObject("obj16");
+    DrawVirtualObject("obj17");
+    DrawVirtualObject("obj18");
+    DrawVirtualObject("obj19");
+    DrawVirtualObject("obj20");
+    DrawVirtualObject("obj21");
+    DrawVirtualObject("obj22");
+    DrawVirtualObject("obj23");
+    DrawVirtualObject("obj24");
+    DrawVirtualObject("obj25");
+    DrawVirtualObject("obj26");
+    DrawVirtualObject("obj27");
+    DrawVirtualObject("obj28");
+    DrawVirtualObject("obj29");
+    DrawVirtualObject("obj30");
+    DrawVirtualObject("obj31");
+    DrawVirtualObject("obj32");
+    DrawVirtualObject("obj33");
+    DrawVirtualObject("obj34");
+    DrawVirtualObject("obj35");
+    DrawVirtualObject("obj36");
+    DrawVirtualObject("obj37"); 
+    DrawVirtualObject("rear_wheel_left"); // roda traseira esquerda
+    DrawVirtualObject("front_wheel_right"); // roda dianteira direita
+    DrawVirtualObject("rear_wheel_right"); // roda traseira direita
 }
 
 // Lógica para atualização da velocidade e posição do carro
