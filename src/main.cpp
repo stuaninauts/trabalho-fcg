@@ -115,8 +115,9 @@ struct ObjModel
 struct Car
 {
     // Movimentação do carro: posição inicial e velocidade
-    glm::vec3 carPosition; // Posicao inicial do carro
-    glm::vec3 carVelocity; // Sem velocidade inicial
+    glm::vec3 carPosition; 
+    glm::vec3 carVelocity;
+    glm::vec3 carAcceleration;
     float speed; // Velocidade atual do carro
     float acceleration; // Aceleração (ou RPM) do carro
     float max_speed; // Velocidade máxima do carro
@@ -126,14 +127,15 @@ struct Car
 
     // Construtor
     Car() 
-        : carPosition(0.0f, -1.0f, 0.0f), 
+        : carPosition(0.0f, -1.0f, 0.0f),  // Posicao inicial do carro
           carVelocity(0.0f, 0.0f, 0.0f), 
+          carAcceleration(0.0f, 0.0f, 0.0f), 
           speed(0.0f), 
           acceleration(0.0f), 
           max_speed(100.0f), 
           max_acceleration(20.0f),
           acceleration_rate(10.0f), 
-          deceleration_rate(2.0f) 
+          deceleration_rate(5.0f) 
     {}
 };
 
@@ -403,10 +405,6 @@ int main(int argc, char* argv[])
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
     
-    // Movimentação do carro: posição inicial e velocidade
-    glm::vec3 carPosition(0.0f, -1.0f, 0.0f); // Initial position of the car
-    float carSpeed = 5.0f; // Movement speed (units per second)
-
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
@@ -1465,10 +1463,12 @@ void TextRendering_ShowVelocity(GLFWwindow* window)
     float charwidth = TextRendering_CharWidth(window);
 
     char buffer[50];
-    snprintf(buffer, 50, "Speed: %.2f", car.speed);
+    snprintf(buffer, 50, "Speed: %.2f", glm::length(car.carVelocity));
     TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 2 * lineheight, 1.0f);
 
-    snprintf(buffer, 50, "Acceleration: %.2f", car.acceleration);
+    float acceleration = glm::length(car.carAcceleration);
+    float signed_acceleration = (glm::dot(car.carAcceleration, glm::vec3(0.0f, 0.0f, -1.0f)) < 0) ? -acceleration : acceleration;
+    snprintf(buffer, 50, "Acceleration: %.2f", signed_acceleration);
     TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 3 * lineheight, 1.0f);
 }
 
@@ -1680,61 +1680,53 @@ void PrintObjModelInfo(ObjModel* model)
 // Lógica para atualização da velocidade e posição do carro
 void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed, bool key_A_pressed, bool key_D_pressed, float deltaTime)
 {
+    // Limite estabelicido para não bugar a velocidade quando está muito próxima de 0 
+    const float epsilon = 0.05f;
+
+    glm::vec3 forward_direction = glm::vec3(0.0f, 0.0f, -1.0f); // Direção para frente do carro
+
     if (key_W_pressed)
     {
         // Aumenta a aceleração
-        car.acceleration += car.acceleration_rate;
-        if (car.acceleration > car.max_acceleration)
-            car.acceleration = car.max_acceleration;
+        car.carAcceleration += forward_direction * car.acceleration_rate * deltaTime;
+        if (glm::length(car.carAcceleration) > car.max_acceleration)
+            car.carAcceleration = glm::normalize(car.carAcceleration) * car.max_acceleration;
     }
     else if (key_S_pressed)
     {
         // Reduz a aceleração (anda para trás)
-        car.acceleration -= car.acceleration_rate;
-        if (car.acceleration < -car.max_acceleration)
-            car.acceleration = -car.max_acceleration;
+        car.carAcceleration -= forward_direction * car.acceleration_rate * deltaTime;
+        if (glm::length(car.carAcceleration) > car.max_acceleration)
+            car.carAcceleration = glm::normalize(car.carAcceleration) * car.max_acceleration;
     }
     else 
     {
         // Gradativamente reduz a aceleração (freio natural)
-        if (car.carVelocity.z > 0)
+        if (glm::length(car.carVelocity) > epsilon)
         {
-            negative_acceleration = false;
-            car.acceleration = -car.deceleration_rate;
-
+            car.carAcceleration = -glm::normalize(car.carVelocity) * car.deceleration_rate;
         }
-        else if (car.carVelocity.z > 0)
+        else
         {
-            negative_acceleration = false;
-            car.acceleration = car.deceleration_rate;
-
+            car.carAcceleration = glm::vec3(0.0f);
+            car.carVelocity = glm::vec3(0.0f);
         }
-        // else if (car.acceleration < 0)
-        // {
-        //     negative_acceleration = true;
-        //     car.acceleration += car.deceleration_rate * deltaTime;
-        //     if (car.acceleration > 0)
-        //         car.acceleration = 0;
-        // }
     }
 
+    // Atualiza a velocidade do carro com base na aceleração
+    car.carVelocity += car.carAcceleration * deltaTime;
 
-    float actual_speed = car.speed + car.acceleration;
-    if (actual_speed > car.max_speed)
-        actual_speed = car.max_speed;
-    else if (actual_speed < -car.max_speed)
-        actual_speed = -car.max_speed;
+    // Limita a velocidade máxima do carro
+    if (glm::length(car.carVelocity) > car.max_speed)
+        car.carVelocity = glm::normalize(car.carVelocity) * car.max_speed;
 
-    // Atualiza a velocidade do carro (com direção) e a posição
-    car.carVelocity = glm::vec3(0.0f, 0.0f, actual_speed);
+    // Atualiza a posição do carro
+    car.carPosition += car.carVelocity * deltaTime;
 
-    car.speed = std::abs(car.carVelocity.z);
-
-    car.carPosition -= car.carVelocity * deltaTime;
-    
+    // Atualiza a velocidade e aceleracao escalar do carro
+    car.speed = glm::length(car.carVelocity);
+    car.acceleration = glm::length(car.carAcceleration);
 }
-
-
 
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
 // vim: set spell spelllang=pt_br :
