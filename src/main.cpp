@@ -1696,18 +1696,16 @@ void DrawCar()
     DrawVirtualObject("obj1"); // parabarros dianteiros
     DrawVirtualObject("obj2"); // defletor dianteiro
     DrawVirtualObject("obj3"); // parachoque dianteiro
-    DrawVirtualObject("obj4"); // calotas (4)
-    DrawVirtualObject("obj5"); // logo tras
-    DrawVirtualObject("obj6"); // logo frente
-    DrawVirtualObject("obj7"); // parabrisa dianteiro
-    DrawVirtualObject("obj8"); // borracha em volta do parabrisa dianteiro
-    DrawVirtualObject("obj9"); // capo dianteiro
-    DrawVirtualObject("obj10"); // envoltura lanteras traseiras
-    DrawVirtualObject("obj11"); // lanteras traseiras
-    DrawVirtualObject("obj12"); // lanternas dianteiras
-    DrawVirtualObject("front_wheel_left"); // roda dianteira esquerda
-    DrawVirtualObject("obj14"); // escapamento
-    DrawVirtualObject("obj15"); // retrovisores
+    DrawVirtualObject("obj4"); // logo tras
+    DrawVirtualObject("obj5"); // logo frente
+    DrawVirtualObject("obj6"); // parabrisa dianteiro
+    DrawVirtualObject("obj7"); // borracha em volta do parabrisa dianteiro
+    DrawVirtualObject("obj8"); // capo dianteiro
+    DrawVirtualObject("obj9"); // envoltura lanteras traseiras
+    DrawVirtualObject("obj10"); // lanteras traseiras
+    DrawVirtualObject("obj11"); // lanternas dianteiras
+    DrawVirtualObject("obj14"); 
+    DrawVirtualObject("obj15"); 
     DrawVirtualObject("obj16");
     DrawVirtualObject("obj17");
     DrawVirtualObject("obj18");
@@ -1728,10 +1726,10 @@ void DrawCar()
     DrawVirtualObject("obj33");
     DrawVirtualObject("obj34");
     DrawVirtualObject("obj35");
-    DrawVirtualObject("obj36");
-    DrawVirtualObject("obj37"); 
-    DrawVirtualObject("rear_wheel_left"); // roda traseira esquerda
+    DrawVirtualObject("exhaust"); // escapamento
+    DrawVirtualObject("front_wheel_left"); // roda dianteira direita
     DrawVirtualObject("front_wheel_right"); // roda dianteira direita
+    DrawVirtualObject("rear_wheel_left"); // roda traseira esquerda
     DrawVirtualObject("rear_wheel_right"); // roda traseira direita
 }
 
