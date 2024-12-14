@@ -118,13 +118,22 @@ struct Car
     glm::vec3 carPosition; 
     glm::vec3 carVelocity;
     glm::vec3 carAcceleration;
+    
     float speed; // Velocidade atual do carro
     float acceleration; // Aceleração (ou RPM) do carro
-    float max_speed; // Velocidade máxima do carro
-    float max_acceleration; // Aceleracao Máxima do carro
     float acceleration_rate; // Taxa de aceleração
     float deceleration_rate; // Taxa de desaceleração
+    
+    float max_speed; // Velocidade máxima do carro
+    float max_acceleration; // Aceleracao Máxima do carro
+    
     float front_wheel_angle;
+    float max_front_wheel_angle; // Ângulo máximo de rotação das rodas dianteiras
+    glm::vec3 frontLeftWheelPosition; // Posição da roda dianteira esquerda
+
+    glm::mat4 frontLeftWheelTransform; 
+    glm::mat4 frontRightWheelTransform; 
+
 
     // Construtor
     Car() 
@@ -133,11 +142,15 @@ struct Car
           carAcceleration(0.0f, 0.0f, 0.0f), 
           speed(0.0f), 
           acceleration(0.0f), 
-          max_speed(100.0f), 
-          max_acceleration(20.0f),
           acceleration_rate(10.0f), 
           deceleration_rate(5.0f),
-          front_wheel_angle(0.0f)
+          max_speed(100.0f), 
+          max_acceleration(20.0f),
+          front_wheel_angle(0.0f),
+          max_front_wheel_angle(glm::radians(35.0f)),
+          frontLeftWheelPosition(-1.1f, -0.55f, 0.18f),
+          frontLeftWheelTransform(1.0f),
+          frontRightWheelTransform(1.0f)
     {}
 };
 
@@ -165,12 +178,14 @@ void PopMatrix(glm::mat4& M);
 void BuildTrianglesAndAddToVirtualScene(ObjModel*); // Constrói representação de um ObjModel como malha de triângulos para renderização
 void ComputeNormals(ObjModel* model); // Computa normais de um ObjModel, caso não existam.
 void LoadShadersFromFiles(); // Carrega os shaders de vértice e fragmento, criando um programa de GPU
-void DrawVirtualObject(const char* object_name); // Desenha um objeto armazenado em g_VirtualScene
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
 GLuint LoadShader_Fragment(const char* filename); // Carrega um fragment shader
 void LoadShader(const char* filename, GLuint shader_id); // Função utilizada pelas duas acima
 GLuint CreateGpuProgram(GLuint vertex_shader_id, GLuint fragment_shader_id); // Cria um programa de GPU
 void PrintObjModelInfo(ObjModel*); // Função para debugging
+
+void DrawVirtualObject(const char* object_name); // Desenha um objeto armazenado em g_VirtualScene
+
 
 // Declaração de funções auxiliares para renderizar texto dentro da janela
 // OpenGL. Estas funções estão definidas no arquivo "textrendering.cpp".
@@ -202,9 +217,11 @@ void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
 // Desenho do carro
 void DrawCar();
+void DrawVirtualObjectWithTransform(const char* object_name, glm::mat4 transform);
 
 // Movimentacao do carro
 void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed, bool key_A_pressed, bool key_D_pressed, float deltaTime);
+void UpdateFrontWheelsAngle(Car &car, bool key_A_pressed, bool key_D_pressed);
 
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
@@ -421,7 +438,8 @@ int main(int argc, char* argv[])
 
         // Movimentação do carro: atualiza velocidade
         UpdateCarSpeedAndPosition(car, key_W_pressed, key_S_pressed, key_A_pressed, key_D_pressed, deltaTime);        
-
+        // Atualiza rotacao das rodas dianteiras
+        UpdateFrontWheelsAngle(car, key_A_pressed, key_D_pressed);
 
         // Aqui executamos as operações de renderização
 
@@ -1685,11 +1703,11 @@ void PrintObjModelInfo(ObjModel* model)
 
 void DrawCar()
 {
-    glm::mat4 model2 = Matrix_Translate(car.carPosition.x, car.carPosition.y, car.carPosition.z)
+    glm::mat4 model = Matrix_Translate(car.carPosition.x, car.carPosition.y, car.carPosition.z)
                     * Matrix_Rotate_X(-PI/2)
                     * Matrix_Rotate_Z(-PI/2);
 
-    glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model2));
+    glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
     glUniform1i(g_object_id_uniform, CAR);
 
     // Desenhar cada parte do carro
@@ -1727,10 +1745,25 @@ void DrawCar()
     DrawVirtualObject("obj34");
     DrawVirtualObject("obj35");
     DrawVirtualObject("exhaust"); // escapamento
-    DrawVirtualObject("front_wheel_left"); // roda dianteira direita
-    DrawVirtualObject("front_wheel_right"); // roda dianteira direita
+    // DrawVirtualObject("front_wheel_left"); // roda dianteira direita
+    // DrawVirtualObject("front_wheel_right"); // roda dianteira direita
     DrawVirtualObject("rear_wheel_left"); // roda traseira esquerda
     DrawVirtualObject("rear_wheel_right"); // roda traseira direita
+
+    glm::mat4 frontLeftWheelModel = model * car.frontLeftWheelTransform;
+    DrawVirtualObjectWithTransform("front_wheel_left", frontLeftWheelModel);
+    glm::mat4 frontRightWheelModel = model * car.frontRightWheelTransform;
+    DrawVirtualObjectWithTransform("front_wheel_right", frontRightWheelModel);
+}
+
+void DrawVirtualObjectWithTransform(const char* object_name, glm::mat4 transform)
+{
+    SceneObject& obj = g_VirtualScene[object_name];
+    glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(transform));
+    glUniform1i(g_object_id_uniform, CAR); // Ajuste conforme necessário
+    glBindVertexArray(obj.vertex_array_object_id);
+    glDrawElements(obj.rendering_mode, obj.num_indices, GL_UNSIGNED_INT, (void*)(obj.first_index * sizeof(GLuint)));
+    glBindVertexArray(0);
 }
 
 // Lógica para atualização da velocidade e posição do carro
@@ -1782,6 +1815,42 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
     // Atualiza a velocidade e aceleracao escalar do carro
     car.speed = glm::length(car.carVelocity);
     car.acceleration = glm::length(car.carAcceleration);
+}
+
+void UpdateFrontWheelsAngle(Car &car, bool key_A_pressed, bool key_D_pressed) 
+{
+    // Atualiza o ângulo das rodas dianteiras
+    if (key_A_pressed)
+    {
+        car.front_wheel_angle += glm::radians(2.0f);
+        if (car.front_wheel_angle > car.max_front_wheel_angle)
+            car.front_wheel_angle = car.max_front_wheel_angle;
+    }
+    else if (key_D_pressed)
+    {
+        car.front_wheel_angle -= glm::radians(2.0f);
+        if (car.front_wheel_angle < -car.max_front_wheel_angle)
+            car.front_wheel_angle = -car.max_front_wheel_angle;
+    }
+    else
+    {
+        // Gradualmente retorna as rodas dianteiras ao ângulo neutro
+        if (car.front_wheel_angle > 0.0f)
+        {
+            car.front_wheel_angle -= 0.02f;
+            if (car.front_wheel_angle < 0.0f)
+                car.front_wheel_angle = 0.0f;
+        }
+        else if (car.front_wheel_angle < 0.0f)
+        {
+            car.front_wheel_angle += 0.02f;
+            if (car.front_wheel_angle > 0.0f)
+                car.front_wheel_angle = 0.0f;
+        }
+    }
+
+    car.frontLeftWheelTransform = Matrix_Translate(-1.1f, -0.55f, 0.18f) * Matrix_Rotate_Z(car.front_wheel_angle) * Matrix_Translate(1.1f, 0.55f, -0.18f);
+    car.frontRightWheelTransform = Matrix_Translate(-1.1f, 0.55f, 0.18f) * Matrix_Rotate_Z(car.front_wheel_angle) * Matrix_Translate(1.1f, -0.55f, -0.18f);
 }
 
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
