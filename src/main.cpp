@@ -114,7 +114,6 @@ struct ObjModel
 
 struct Car
 {
-    // Movimentação do carro: posição inicial e velocidade
     glm::vec3 carPosition; 
     glm::vec3 carVelocity;
     glm::vec3 carAcceleration;
@@ -127,17 +126,24 @@ struct Car
     float max_speed; // Velocidade máxima do carro
     float max_acceleration; // Aceleracao Máxima do carro
     
-    float front_wheel_angle;
+    float wheel_rotation_angle; // Angulo atual de rotacao das rodas (foi feita simplificacao de todas rodas terem a mesma rotacao)
+
+    float front_wheel_angle; // Angulo atual de rotação das rodas dianteiras
     float max_front_wheel_angle; // Ângulo máximo de rotação das rodas dianteiras
+
     glm::vec3 frontLeftWheelPosition; // Posição da roda dianteira esquerda
+    glm::vec3 frontRightWheelPosition; // Posição da roda dianteira direita
+    glm::vec3 rearLeftWheelPosition; // Posição da roda traseira esquerda
+    glm::vec3 rearRightWheelPosition; // Posição da roda traseira direita
 
     glm::mat4 frontLeftWheelTransform; 
     glm::mat4 frontRightWheelTransform; 
-
+    glm::mat4 rearLeftWheelTransform; 
+    glm::mat4 rearRightWheelTransform; 
 
     // Construtor
     Car() 
-        : carPosition(0.0f, -0.95f, 0.0f),  // Posicao inicial do carro
+        : carPosition(0.0f, -0.95f, 0.0f),
           carVelocity(0.0f, 0.0f, 0.0f), 
           carAcceleration(0.0f, 0.0f, 0.0f), 
           speed(0.0f), 
@@ -146,11 +152,17 @@ struct Car
           deceleration_rate(5.0f),
           max_speed(100.0f), 
           max_acceleration(20.0f),
+          wheel_rotation_angle(0.0f),
           front_wheel_angle(0.0f),
           max_front_wheel_angle(glm::radians(35.0f)),
           frontLeftWheelPosition(-1.1f, -0.55f, 0.18f),
+          frontRightWheelPosition(-1.1f, 0.55f, 0.18f),          
+          rearLeftWheelPosition(0.59f, -0.55f, 0.19f ),
+          rearRightWheelPosition(0.59f, 0.55f, 0.19f),
           frontLeftWheelTransform(1.0f),
-          frontRightWheelTransform(1.0f)
+          frontRightWheelTransform(1.0f),
+          rearLeftWheelTransform(1.0f),
+          rearRightWheelTransform(1.0f)
     {}
 };
 
@@ -221,7 +233,8 @@ void DrawVirtualObjectWithTransform(const char* object_name, glm::mat4 transform
 
 // Movimentacao do carro
 void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed, bool key_A_pressed, bool key_D_pressed, float deltaTime);
-void UpdateFrontWheelsAngle(Car &car, bool key_A_pressed, bool key_D_pressed);
+void UpdateFrontWheelsAngle(Car &car, bool key_A_pressed, bool key_D_pressed, float deltaTime);
+void UpdateWheelsTransforms(Car &car, float deltaTime);
 
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
@@ -436,10 +449,10 @@ int main(int argc, char* argv[])
         float deltaTime = static_cast<float>(currentTime - previousTime);
         previousTime = currentTime;
 
-        // Movimentação do carro: atualiza velocidade
+        // Movimentação do carro
         UpdateCarSpeedAndPosition(car, key_W_pressed, key_S_pressed, key_A_pressed, key_D_pressed, deltaTime);        
-        // Atualiza rotacao das rodas dianteiras
-        UpdateFrontWheelsAngle(car, key_A_pressed, key_D_pressed);
+        UpdateFrontWheelsAngle(car, key_A_pressed, key_D_pressed, deltaTime);
+        UpdateWheelsTransforms(car, deltaTime);
 
         // Aqui executamos as operações de renderização
 
@@ -1745,15 +1758,16 @@ void DrawCar()
     DrawVirtualObject("obj34");
     DrawVirtualObject("obj35");
     DrawVirtualObject("exhaust"); // escapamento
-    // DrawVirtualObject("front_wheel_left"); // roda dianteira direita
-    // DrawVirtualObject("front_wheel_right"); // roda dianteira direita
-    DrawVirtualObject("rear_wheel_left"); // roda traseira esquerda
-    DrawVirtualObject("rear_wheel_right"); // roda traseira direita
 
     glm::mat4 frontLeftWheelModel = model * car.frontLeftWheelTransform;
-    DrawVirtualObjectWithTransform("front_wheel_left", frontLeftWheelModel);
     glm::mat4 frontRightWheelModel = model * car.frontRightWheelTransform;
+    DrawVirtualObjectWithTransform("front_wheel_left", frontLeftWheelModel);
     DrawVirtualObjectWithTransform("front_wheel_right", frontRightWheelModel);
+
+    glm::mat4 rearLeftWheelModel = model * car.rearLeftWheelTransform;
+    glm::mat4 rearRightWheelModel = model * car.rearRightWheelTransform;
+    DrawVirtualObjectWithTransform("rear_wheel_left", rearLeftWheelModel);
+    DrawVirtualObjectWithTransform("rear_wheel_right", rearRightWheelModel);
 }
 
 void DrawVirtualObjectWithTransform(const char* object_name, glm::mat4 transform)
@@ -1783,6 +1797,7 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
     }
     else if (key_S_pressed)
     {
+        // TODO: talvez aumentar a aceleração negativa para frear mais rápido
         // Reduz a aceleração (anda para trás)
         car.carAcceleration -= forward_direction * car.acceleration_rate * deltaTime;
         if (glm::length(car.carAcceleration) > car.max_acceleration)
@@ -1802,6 +1817,14 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
         }
     }
 
+    // TODO: movimentacao lateral
+    if (key_A_pressed)
+    {
+    }
+    else if (key_D_pressed)
+    {
+    }
+
     // Atualiza a velocidade do carro com base na aceleração
     car.carVelocity += car.carAcceleration * deltaTime;
 
@@ -1817,18 +1840,18 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
     car.acceleration = glm::length(car.carAcceleration);
 }
 
-void UpdateFrontWheelsAngle(Car &car, bool key_A_pressed, bool key_D_pressed) 
+void UpdateFrontWheelsAngle(Car &car, bool key_A_pressed, bool key_D_pressed, float deltaTime) 
 {
     // Atualiza o ângulo das rodas dianteiras
     if (key_A_pressed)
     {
-        car.front_wheel_angle += glm::radians(2.0f);
+        car.front_wheel_angle += 3.0f * deltaTime;
         if (car.front_wheel_angle > car.max_front_wheel_angle)
             car.front_wheel_angle = car.max_front_wheel_angle;
     }
     else if (key_D_pressed)
     {
-        car.front_wheel_angle -= glm::radians(2.0f);
+        car.front_wheel_angle -= 3.0f * deltaTime;
         if (car.front_wheel_angle < -car.max_front_wheel_angle)
             car.front_wheel_angle = -car.max_front_wheel_angle;
     }
@@ -1837,20 +1860,82 @@ void UpdateFrontWheelsAngle(Car &car, bool key_A_pressed, bool key_D_pressed)
         // Gradualmente retorna as rodas dianteiras ao ângulo neutro
         if (car.front_wheel_angle > 0.0f)
         {
-            car.front_wheel_angle -= 0.02f;
+            car.front_wheel_angle -= 1.5f * deltaTime;
             if (car.front_wheel_angle < 0.0f)
                 car.front_wheel_angle = 0.0f;
         }
         else if (car.front_wheel_angle < 0.0f)
         {
-            car.front_wheel_angle += 0.02f;
+            car.front_wheel_angle += 1.5f * deltaTime;
             if (car.front_wheel_angle > 0.0f)
                 car.front_wheel_angle = 0.0f;
         }
     }
 
-    car.frontLeftWheelTransform = Matrix_Translate(-1.1f, -0.55f, 0.18f) * Matrix_Rotate_Z(car.front_wheel_angle) * Matrix_Translate(1.1f, 0.55f, -0.18f);
-    car.frontRightWheelTransform = Matrix_Translate(-1.1f, 0.55f, 0.18f) * Matrix_Rotate_Z(car.front_wheel_angle) * Matrix_Translate(1.1f, -0.55f, -0.18f);
+}
+
+void UpdateWheelsTransforms(Car &car, float deltaTime) 
+{
+    // Calcula a rotação das rodas com base na distância percorrida
+    float rotation_direction = (glm::dot(car.carVelocity, glm::vec3(0.0f, 0.0f, -1.0f)) < 0) ? 1.0f : -1.0f;
+    float distance = rotation_direction * car.speed * deltaTime;
+    float wheel_radius = 0.3f;
+    car.wheel_rotation_angle += distance / wheel_radius;
+
+    // Ângulo da cambagem negativa das rodas
+    // É necessário para corrigir a inclinação das rodas para fazerem elas girarem corretamente
+    float negative_camber_angle = glm::radians(11.0f);
+
+    // Atualiza as matrizes de transformação das 4 rodas
+    car.frontLeftWheelTransform = Matrix_Translate(
+                                    car.frontLeftWheelPosition.x, 
+                                    car.frontLeftWheelPosition.y, 
+                                    car.frontLeftWheelPosition.z)
+                                * Matrix_Rotate_X(-negative_camber_angle) // correcao da cambagem
+                                * Matrix_Rotate_Z(car.front_wheel_angle) // angulacao das rodas (necessario apenas para as dianteiras)
+                                * Matrix_Rotate_Y(car.wheel_rotation_angle) // rotacao das rodas
+                                * Matrix_Rotate_X(negative_camber_angle) // correcao da cambagem
+                                * Matrix_Translate(                                    
+                                    -car.frontLeftWheelPosition.x, 
+                                    -car.frontLeftWheelPosition.y, 
+                                    -car.frontLeftWheelPosition.z);
+
+    car.frontRightWheelTransform = Matrix_Translate(
+                                car.frontRightWheelPosition.x, 
+                                car.frontRightWheelPosition.y, 
+                                car.frontRightWheelPosition.z)
+                            * Matrix_Rotate_X(negative_camber_angle) // correcao da cambagem (lado direito tem valor inverso)
+                            * Matrix_Rotate_Z(car.front_wheel_angle)
+                            * Matrix_Rotate_Y(car.wheel_rotation_angle)
+                            * Matrix_Rotate_X(-negative_camber_angle)
+                            * Matrix_Translate(                                    
+                                -car.frontRightWheelPosition.x, 
+                                -car.frontRightWheelPosition.y, 
+                                -car.frontRightWheelPosition.z);
+
+    car.rearRightWheelTransform = Matrix_Translate(
+                            car.rearRightWheelPosition.x, 
+                            car.rearRightWheelPosition.y, 
+                            car.rearRightWheelPosition.z)
+                        * Matrix_Rotate_X(negative_camber_angle)
+                        * Matrix_Rotate_Y(car.wheel_rotation_angle)
+                        * Matrix_Rotate_X(-negative_camber_angle)
+                        * Matrix_Translate(                                    
+                            -car.rearRightWheelPosition.x, 
+                            -car.rearRightWheelPosition.y, 
+                            -car.rearRightWheelPosition.z);
+
+    car.rearLeftWheelTransform = Matrix_Translate(
+                            car.rearLeftWheelPosition.x, 
+                            car.rearLeftWheelPosition.y, 
+                            car.rearLeftWheelPosition.z)
+                        * Matrix_Rotate_X(-negative_camber_angle)
+                        * Matrix_Rotate_Y(car.wheel_rotation_angle)
+                        * Matrix_Rotate_X(negative_camber_angle)
+                        * Matrix_Translate(                                    
+                            -car.rearLeftWheelPosition.x, 
+                            -car.rearLeftWheelPosition.y, 
+                            -car.rearLeftWheelPosition.z);
 }
 
 // set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
