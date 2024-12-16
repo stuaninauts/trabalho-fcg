@@ -1507,6 +1507,16 @@ void TextRendering_ShowVelocity(GLFWwindow* window)
     float signed_acceleration = (glm::dot(car.carAcceleration, glm::vec3(0.0f, 0.0f, -1.0f)) < 0) ? -acceleration : acceleration;
     snprintf(buffer, 50, "Acceleration: %.2f", signed_acceleration);
     TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 3 * lineheight, 1.0f);
+
+    snprintf(buffer, 50, "Front Wheel Angle: %.2f", car.front_wheel_angle);
+    TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 4 * lineheight, 1.0f);
+
+    snprintf(buffer, 50, "Vec Velocity: (%.2f, %.2f, %.2f)", car.carVelocity.x, car.carVelocity.y, car.carVelocity.z);
+    TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 5 * lineheight, 1.0f);
+
+    snprintf(buffer, 50, "Vec Acceleration: (%.2f, %.2f, %.2f)", car.carAcceleration.x, car.carAcceleration.y, car.carAcceleration.z);
+    TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 6 * lineheight, 1.0f);
+
 }
 
 // Escrevemos na tela o número de quadros renderizados por segundo (frames per
@@ -1818,12 +1828,7 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
     }
 
     // TODO: movimentacao lateral
-    if (key_A_pressed)
-    {
-    }
-    else if (key_D_pressed)
-    {
-    }
+    // usar angulo das rodas pra direcionar o carro
 
     // Atualiza a velocidade do carro com base na aceleração
     car.carVelocity += car.carAcceleration * deltaTime;
@@ -1876,6 +1881,7 @@ void UpdateFrontWheelsAngle(Car &car, bool key_A_pressed, bool key_D_pressed, fl
 
 void UpdateWheelsTransforms(Car &car, float deltaTime) 
 {
+    // TODO: arrumar que a roda ta trambicando
     // Calcula a rotação das rodas com base na distância percorrida
     float rotation_direction = (glm::dot(car.carVelocity, glm::vec3(0.0f, 0.0f, -1.0f)) < 0) ? 1.0f : -1.0f;
     float distance = rotation_direction * car.speed * deltaTime;
