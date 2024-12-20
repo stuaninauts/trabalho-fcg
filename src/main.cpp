@@ -56,6 +56,7 @@
 
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
+
 struct ObjModel
 {
     tinyobj::attrib_t                 attrib;
@@ -1732,57 +1733,57 @@ void DrawCar()
 {
     glm::mat4 model = Matrix_Translate(car.carPosition.x, car.carPosition.y, car.carPosition.z)
                     * Matrix_Rotate_Y(car.rotation_angle)
-                    * Matrix_Rotate_X(-PI/2)
-                    * Matrix_Rotate_Z(-PI/2);
+                    * Matrix_Rotate_Y(-PI/2);
 
     glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
     glUniform1i(g_object_id_uniform, CAR);
 
     // Desenhar cada parte do carro
-    DrawVirtualObject("obj1"); // parabarros dianteiros
-    DrawVirtualObject("obj2"); // defletor dianteiro
-    DrawVirtualObject("obj3"); // parachoque dianteiro
-    DrawVirtualObject("obj4"); // logo tras
-    DrawVirtualObject("obj5"); // logo frente
-    DrawVirtualObject("obj6"); // parabrisa dianteiro
-    DrawVirtualObject("obj7"); // borracha em volta do parabrisa dianteiro
-    DrawVirtualObject("obj8"); // capo dianteiro
-    DrawVirtualObject("obj9"); // envoltura lanteras traseiras
-    DrawVirtualObject("obj10"); // lanteras traseiras
-    DrawVirtualObject("obj11"); // lanternas dianteiras
-    DrawVirtualObject("obj14"); 
-    DrawVirtualObject("obj15"); 
-    DrawVirtualObject("obj16");
-    DrawVirtualObject("obj17");
-    DrawVirtualObject("obj18");
-    DrawVirtualObject("obj19");
-    DrawVirtualObject("obj20");
-    DrawVirtualObject("obj21");
-    DrawVirtualObject("obj22");
-    DrawVirtualObject("obj23");
-    DrawVirtualObject("obj24");
-    DrawVirtualObject("obj25");
-    DrawVirtualObject("obj26");
-    DrawVirtualObject("obj27");
-    DrawVirtualObject("obj28");
-    DrawVirtualObject("obj29");
-    DrawVirtualObject("obj30");
-    DrawVirtualObject("obj31");
-    DrawVirtualObject("obj32");
-    DrawVirtualObject("obj33");
-    DrawVirtualObject("obj34");
-    DrawVirtualObject("obj35");
-    DrawVirtualObject("exhaust"); // escapamento
+    DrawVirtualObject("Bottom_panel"); // parabarros dianteiros
+    DrawVirtualObject("front_skirts"); // defletor dianteiro
+    DrawVirtualObject("front_bumper"); // parachoque dianteiro
+    DrawVirtualObject("front__toyota_logo"); // logo tras
+    DrawVirtualObject("Front_toyota_logo"); // logo frente
+    DrawVirtualObject("front_window"); // parabrisa dianteiro
+    DrawVirtualObject("front_window_frame"); // borracha em volta do parabrisa dianteiro
+    DrawVirtualObject("hood"); // capo dianteiro
+    DrawVirtualObject("front_light_shape"); // envoltura lanteras traseiras
+    DrawVirtualObject("front_light"); // lanteras traseiras
+    DrawVirtualObject("front_light_glass"); // lanternas dianteiras
+    DrawVirtualObject("exhaust"); 
+    DrawVirtualObject("mirrors"); 
+    DrawVirtualObject("Wing");
+    DrawVirtualObject("Bottom_panel");
+    DrawVirtualObject("tank");
+    DrawVirtualObject("cooler_holes");
+    DrawVirtualObject("side_skirts");
+    DrawVirtualObject("side_smaller_window");
+    DrawVirtualObject("side_window");
+    DrawVirtualObject("side_window_frame");
+    DrawVirtualObject("license_plate");
+    DrawVirtualObject("side_panel");
+    DrawVirtualObject("side_smaller_window_frame");
+    DrawVirtualObject("door");
+    DrawVirtualObject("body");
+    DrawVirtualObject("front_fender");
+    DrawVirtualObject("tail_lights");
+    DrawVirtualObject("tail_lights_glass");
+    DrawVirtualObject("tail_lights_shape");
+    DrawVirtualObject("tail_window");
+    DrawVirtualObject("trunk");
+    DrawVirtualObject("tail_lights_walls");
+    DrawVirtualObject("tail_window_frame"); // escapamento
+
 
     glm::mat4 frontLeftWheelModel = model * car.frontLeftWheelTransform;
     glm::mat4 frontRightWheelModel = model * car.frontRightWheelTransform;
-    DrawVirtualObjectWithTransform("front_wheel_left", frontLeftWheelModel);
-    DrawVirtualObjectWithTransform("front_wheel_right", frontRightWheelModel);
+    DrawVirtualObjectWithTransform("wheel_front_left", frontLeftWheelModel);
+    DrawVirtualObjectWithTransform("wheel_front_right", frontRightWheelModel);
 
     glm::mat4 rearLeftWheelModel = model * car.rearLeftWheelTransform;
     glm::mat4 rearRightWheelModel = model * car.rearRightWheelTransform;
-    DrawVirtualObjectWithTransform("rear_wheel_left", rearLeftWheelModel);
-    DrawVirtualObjectWithTransform("rear_wheel_right", rearRightWheelModel);
+    DrawVirtualObjectWithTransform("wheel_back_left", rearLeftWheelModel);
+    DrawVirtualObjectWithTransform("wheel_back_right", rearRightWheelModel);
 }
 
 void DrawVirtualObjectWithTransform(const char* object_name, glm::mat4 transform)
@@ -1803,11 +1804,11 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
 
     // TODO:
     // // Direção atual baseada na orientação do carro
-    // glm::vec3 forward_direction = glm::normalize(glm::vec3(
-    //     -glm::sin(car.front_wheel_angle), 
-    //     0.0f, 
-    //     -glm::cos(car.front_wheel_angle)));
-    glm::vec3 forward_direction = glm::normalize(glm::vec3(.0f, .0f, -1.0f));
+    glm::vec3 forward_direction = glm::normalize(glm::vec3(
+        -glm::sin(car.front_wheel_angle), 
+        0.0f, 
+        -glm::cos(car.front_wheel_angle)));
+    // glm::vec3 forward_direction = glm::normalize(glm::vec3(.0f, .0f, -1.0f));
     // glm::vec3 velocity_direction = glm::rotate(forward_direction, car.front_wheel_angle, right_direction);
     if (key_W_pressed)
     {
@@ -1853,7 +1854,7 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
         car.carVelocity = glm::normalize(car.carVelocity) * car.max_speed;
 
     // Atualiza a rotação do carro com base na direção da velocidade
-    if (glm::length(car.carVelocity) > .1f)
+    if (glm::length(car.carVelocity) > .2f)
     {
         float rotation_angle = glm::tan(car.front_wheel_angle); // usar vetor da velocidade
         car.rotation_angle += rotation_angle * deltaTime;
@@ -1903,6 +1904,7 @@ void UpdateFrontWheelsAngle(Car &car, bool key_A_pressed, bool key_D_pressed, fl
 
 }
 
+// TODO: corrigir pq mudou o obj
 void UpdateWheelsTransforms(Car &car, float deltaTime) 
 {
     // Calcula a rotação das rodas com base na distância percorrida
