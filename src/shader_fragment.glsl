@@ -19,12 +19,26 @@ uniform mat4 projection;
 #define CAR    3
 #define SUN    4
 #define CLOUD  5
+#define CAR_HOOD 6
+#define CAR_GLASS 7
+#define CAR_PAINTING 8
+#define CAR_METALIC 9
+#define CAR_WHEEL 10
+#define CAR_NOT_PAINTED_PARTS 11
 
 uniform int object_id;
+uniform int uv_mapping_type;
 
 // Parâmetros da axis-aligned bounding box (AABB) do modelo
 uniform vec4 bbox_min;
 uniform vec4 bbox_max;
+
+// Variáveis para acesso das imagens de textura
+uniform sampler2D TextureCarHood;
+uniform sampler2D TextureCarMetalic;
+uniform sampler2D TextureCarPainting;
+uniform sampler2D TextureCarWheel;
+uniform sampler2D TextureCarNotPaintedParts;
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
@@ -62,65 +76,35 @@ void main()
     vec3 Ka; // Refletância ambiente
     float q; // Expoente especular para o modelo de iluminação de Phong
 
-    if ( object_id == SPHERE )
-    {
-        // PREENCHA AQUI
-        // Propriedades espectrais da esfera
-        Kd = vec3(0.8,0.4,0.08);
-        Ks = vec3(0.0,0.0,0.0);
-        Ka = vec3(0.4,0.2,0.04);
-        q = 0.0;
-    }
-    else if ( object_id == BUNNY )
-    {
-        // PREENCHA AQUI
-        // Propriedades espectrais do coelho
-        Kd = vec3(0.08,0.4,0.8);
-        Ks = vec3(0.8, 0.8,0.8);
-        Ka = vec3(0.04,0.2,0.4);
-        q = 32.0;
-    }
-    else if ( object_id == PLANE )
-    {
-        // PREENCHA AQUI
-        // Propriedades espectrais do plano
-        Kd = vec3(0.2, 0.2, 0.2);
-        Ks = vec3(0.3, 0.3, 0.3);
-        Ka = vec3(0.0,0.0,0.0);
-        q = 20.0;
-    }
-    else if ( object_id == CAR )
-    {
-        // Propriedades espectrais do carro
-        Kd = vec3(1.0, 0.0, 0.0); // Diffuse color (red)
-        Ks = vec3(1.0, 0.0, 0.0); // Specular color (red)
-        Ka = vec3(0.1, 0.0, 0.0); // Ambient color (dim red)
-        q = 20.0;
-    }
-    else if ( object_id == SUN )
-    {
-        // Propriedades espectrais do plano
-        Kd = vec3(1.0, 1.0, 0.0); // Diffuse color (yellow)
-        Ks = vec3(1.0, 1.0, 0.0); // Specular color (yellow)
-        Ka = vec3(0.1, 0.1, 0.0); // Ambient color (dim yellow)
-        q = 20.0;
-    }
-    else if ( object_id == CLOUD )
-    {
-        // Propriedades espectrais da nuvem
-        Kd = vec3(1.0, 1.0, 1.0); // Diffuse color (white)
-        Ks = vec3(1.0, 1.0, 1.0); // Specular color (white)
-        Ka = vec3(0.1, 0.1, 0.1); // Ambient color (dim white)
-        q = 20.0;
-    }
-    else // Objeto desconhecido = preto
-    {
-        Kd = vec3(0.0,0.0,0.0);
-        Ks = vec3(0.0,0.0,0.0);
-        Ka = vec3(0.0,0.0,0.0);
-        q = 1.0;
-    }
+    // =========================================== MAPEAMENTO COORDENADAS UV =====================================================
 
+
+    // =========================================== MAPEAMENTO TEXTURAS =====================================================
+    if ( object_id == CAR_HOOD)
+    {
+        Kd = texture(TextureCarHood, vec2(U,V)).rgb;
+    }
+    else if ( object_id == CAR_METALIC)
+    {
+        Kd = texture(TextureCarMetalic, vec2(U,V)).rgb;
+    }
+    else if ( object_id == CAR_PAINTING)
+    {
+        Kd = texture(TextureCarPainting, vec2(U,V)).rgb;
+    }
+    else if ( object_id == CAR_GLASS)
+    {
+        Kd = texture(TextureCarWheel, vec2(U,V)).rgb;
+    }
+    else if ( object_id == CAR_WHEEL)
+    {
+        Kd = texture(TextureCarWheel, vec2(U,V)).rgb;
+    }
+    else if ( object_id == CAR_NOT_PAINTED_PARTS)
+    {
+        Kd = texture(TextureCarNotPaintedParts, vec2(U,V)).rgb;
+    }
+    
     // Espectro da fonte de iluminação
     vec3 I = vec3(1.0, 1.0, 1.0); // PREENCHA AQUI o espectro da fonte de luz
 
@@ -136,26 +120,62 @@ void main()
     // Termo especular utilizando o modelo de iluminação de Phong
     vec3 phong_specular_term  = Ks * I * pow(max(0, dot(r, v)), q); // PREENCH AQUI o termo especular de Phong
 
-    // NOTE: Se você quiser fazer o rendering de objetos transparentes, é
-    // necessário:
-    // 1) Habilitar a operação de "blending" de OpenGL logo antes de realizar o
-    //    desenho dos objetos transparentes, com os comandos abaixo no código C++:
-    //      glEnable(GL_BLEND);
-    //      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // 2) Realizar o desenho de todos objetos transparentes *após* ter desenhado
-    //    todos os objetos opacos; e
-    // 3) Realizar o desenho de objetos transparentes ordenados de acordo com
-    //    suas distâncias para a câmera (desenhando primeiro objetos
-    //    transparentes que estão mais longe da câmera).
-    // Alpha default = 1 = 100% opaco = 0% transparente
+    // color.rgb = lambert_diffuse_term + ambient_term + phong_specular_term;
+
+    // MapTextures(Kd);
+
+    color.rgb = Kd * (lambert_diffuse_term + 0.2);
+
     color.a = 1;
-
-    // Cor final do fragmento calculada com uma combinação dos termos difuso,
-    // especular, e ambiente. Veja slide 129 do documento Aula_17_e_18_Modelos_de_Iluminacao.pdf.
-    color.rgb = lambert_diffuse_term + ambient_term + phong_specular_term;
-
-    // Cor final com correção gamma, considerando monitor sRGB.
-    // Veja https://en.wikipedia.org/w/index.php?title=Gamma_correction&oldid=751281772#Windows.2C_Mac.2C_sRGB_and_TV.2Fvideo_standard_gammas
     color.rgb = pow(color.rgb, vec3(1.0,1.0,1.0)/2.2);
 } 
 
+    // if ( object_id == BUNNY )
+    // {
+    //     // PREENCHA AQUI
+    //     // Propriedades espectrais do coelho
+    //     Kd = vec3(0.08,0.4,0.8);
+    //     Ks = vec3(0.8, 0.8,0.8);
+    //     Ka = vec3(0.04,0.2,0.4);
+    //     q = 32.0;
+    // }
+    // else if ( object_id == PLANE )
+    // {
+    //     // PREENCHA AQUI
+    //     // Propriedades espectrais do plano
+    //     Kd = vec3(0.2, 0.2, 0.2);
+    //     Ks = vec3(0.3, 0.3, 0.3);
+    //     Ka = vec3(0.0,0.0,0.0);
+    //     q = 20.0;
+    // }
+    // else if ( object_id == CAR )
+    // {
+    //     // Propriedades espectrais do carro
+    //     Kd = vec3(1.0, 0.0, 0.0); // Diffuse color (red)
+    //     Ks = vec3(1.0, 0.0, 0.0); // Specular color (red)
+    //     Ka = vec3(0.1, 0.0, 0.0); // Ambient color (dim red)
+    //     q = 20.0;
+    // }
+    // else if ( object_id == SUN )
+    // {
+    //     // Propriedades espectrais do plano
+    //     Kd = vec3(1.0, 1.0, 0.0); // Diffuse color (yellow)
+    //     Ks = vec3(1.0, 1.0, 0.0); // Specular color (yellow)
+    //     Ka = vec3(0.1, 0.1, 0.0); // Ambient color (dim yellow)
+    //     q = 20.0;
+    // }
+    // else if ( object_id == CLOUD )
+    // {
+    //     // Propriedades espectrais da nuvem
+    //     Kd = vec3(1.0, 1.0, 1.0); // Diffuse color (white)
+    //     Ks = vec3(1.0, 1.0, 1.0); // Specular color (white)
+    //     Ka = vec3(0.1, 0.1, 0.1); // Ambient color (dim white)
+    //     q = 20.0;
+    // }
+    // else // Objeto desconhecido = preto
+    // {
+    //     Kd = vec3(0.0,0.0,0.0);
+    //     Ks = vec3(0.0,0.0,0.0);
+    //     Ka = vec3(0.0,0.0,0.0);
+    //     q = 1.0;
+    // }

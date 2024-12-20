@@ -46,6 +46,9 @@
 #include "utils.h"
 #include "matrices.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 #define PI 3.141592f
 
 // Camera look-at: valores maximos e minimos da camera em relação a z/y
@@ -187,6 +190,13 @@ void PrintCarAttributes(const Car& car)
 
 Car car;
 
+struct ObjectConfig {
+    int object_id;
+    std::string object_name;
+    std::string texture_name;
+    int uv_mapping_type;
+};
+
 // Declaração de funções utilizadas para pilha de matrizes de modelagem.
 void PushMatrix(glm::mat4 M);
 void PopMatrix(glm::mat4& M);
@@ -196,6 +206,7 @@ void PopMatrix(glm::mat4& M);
 void BuildTrianglesAndAddToVirtualScene(ObjModel*); // Constrói representação de um ObjModel como malha de triângulos para renderização
 void ComputeNormals(ObjModel* model); // Computa normais de um ObjModel, caso não existam.
 void LoadShadersFromFiles(); // Carrega os shaders de vértice e fragmento, criando um programa de GPU
+void LoadTextureImage(const char* filename);
 GLuint LoadShader_Vertex(const char* filename);   // Carrega um vertex shader
 GLuint LoadShader_Fragment(const char* filename); // Carrega um fragment shader
 void LoadShader(const char* filename, GLuint shader_id); // Função utilizada pelas duas acima
@@ -309,7 +320,10 @@ GLint g_projection_uniform;
 GLint g_object_id_uniform;
 GLint g_bbox_min_uniform;
 GLint g_bbox_max_uniform;
-// GLuint g_uv_mapping_type_uniform;
+GLuint g_uv_mapping_type_uniform;
+
+// Número de texturas carregadas pela função LoadTextureImage()
+GLuint g_NumLoadedTextures = 0;
 
 // Movimentacao do carro
 bool key_W_pressed = false;
@@ -337,6 +351,34 @@ bool type_camera_look_at = true;
 float camera_speed = 5.0f;
 // Camera look at: valor inicial de offset em relação ao carro
 glm::vec3 camera_offset(0.0f, MIN_DISTANCE_LOOK_AT_Y, MIN_DISTANCE_LOOK_AT_Z);
+
+// TODO: descomentar e atualizar em shader fragment
+// enum ObjectID {
+//     BUNNY = 0,
+//     PLANE,
+//     CAR,
+//     SUN,
+//     CLOUD,
+//     CAR_HOOD,
+//     CAR_GLASS,
+//     CAR_PAINTING,
+//     CAR_METALIC,
+//     CAR_WHEEL,
+//     CAR_NOT_PAINTED_PARTS
+// };
+
+#define SPHERE 0
+#define BUNNY  1
+#define PLANE  2
+#define CAR    3
+#define SUN    4
+#define CLOUD  5
+#define CAR_HOOD 6
+#define CAR_GLASS 7
+#define CAR_PAINTING 8
+#define CAR_METALIC 9
+#define CAR_WHEEL 10
+#define CAR_NOT_PAINTED_PARTS 11
 
 int main(int argc, char* argv[])
 {
@@ -408,6 +450,13 @@ int main(int argc, char* argv[])
     // para renderização. Veja slides 180-200 do documento Aula_03_Rendering_Pipeline_Grafico.pdf.
     //
     LoadShadersFromFiles();
+
+    // Texturas do carro
+    LoadTextureImage("../../data/car-textures/Naval_Ensign_of_Japan.png"); // TextureCarHood
+    LoadTextureImage("../../data/car-textures/1K-Silver_Base Color.jpg"); // TextureCarMetalic
+    LoadTextureImage("../../data/car-textures/Metal049A_1K-JPG_Color.jpg"); // TextureCarPainting
+    LoadTextureImage("../../data/car-textures/Rubber004_1K-JPG_Color.jpg"); // TextureCarWheel
+    LoadTextureImage("../../data/car-textures/Metal027_1K-JPG_Color.jpg"); // TextureCarNotPaintedParts
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel spheremodel("../../data/sphere.obj");
@@ -554,12 +603,7 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(g_projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
-
-        #define BUNNY  1
-        #define PLANE  2
-        #define CAR    3
-        #define SUN    4
-        #define CLOUD  5
+        // DrawCar();
 
         // Desenhamos o modelo do coelho
         model = Matrix_Translate(4.0f,0.0f,-6.0f)
@@ -576,14 +620,6 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, PLANE);
         DrawVirtualObject("the_plane");
 
-        // Desenhamos o modelo do carro
-        DrawCar();
-        // model = Matrix_Translate(car.carPosition.x, car.carPosition.y, car.carPosition.z)
-        //         * Matrix_Rotate_Y(-PI/2)
-        //         * Matrix_Rotate_Z(-PI/2);
-        // glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        // glUniform1i(g_object_id_uniform, CAR);
-        // DrawVirtualObject("the_car");
 
         // Desenhamos o modelo do sol
         model = Matrix_Translate(0.0f, .0f, -15.0f)
@@ -632,6 +668,56 @@ int main(int argc, char* argv[])
     return 0;
 }
 
+void LoadTextureImage(const char* filename)
+{
+    printf("Carregando imagem \"%s\"... ", filename);
+
+    // Primeiro fazemos a leitura da imagem do disco
+    stbi_set_flip_vertically_on_load(true);
+    int width;
+    int height;
+    int channels;
+    unsigned char *data = stbi_load(filename, &width, &height, &channels, 3);
+
+    if ( data == NULL )
+    {
+        fprintf(stderr, "ERROR: Cannot open image file \"%s\".\n", filename);
+        std::exit(EXIT_FAILURE);
+    }
+
+    printf("OK (%dx%d).\n", width, height);
+
+    // Agora criamos objetos na GPU com OpenGL para armazenar a textura
+    GLuint texture_id;
+    GLuint sampler_id;
+    glGenTextures(1, &texture_id);
+    glGenSamplers(1, &sampler_id);
+
+    // Veja slides 95-96 do documento Aula_20_Mapeamento_de_Texturas.pdf
+    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glSamplerParameteri(sampler_id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // Parâmetros de amostragem da textura.
+    glSamplerParameteri(sampler_id, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glSamplerParameteri(sampler_id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Agora enviamos a imagem lida do disco para a GPU
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+    glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+
+    GLuint textureunit = g_NumLoadedTextures;
+    glActiveTexture(GL_TEXTURE0 + textureunit);
+    glBindTexture(GL_TEXTURE_2D, texture_id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB8, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glBindSampler(textureunit, sampler_id);
+
+    stbi_image_free(data);
+
+    g_NumLoadedTextures += 1;
+}
 // Função que desenha um objeto armazenado em g_VirtualScene. Veja definição
 // dos objetos na função BuildTrianglesAndAddToVirtualScene().
 void DrawVirtualObject(const char* object_name)
@@ -759,6 +845,17 @@ void LoadShadersFromFiles()
     g_object_id_uniform  = glGetUniformLocation(g_GpuProgramID, "object_id"); // Variável "object_id" em shader_fragment.glsl
     g_bbox_min_uniform   = glGetUniformLocation(g_GpuProgramID, "bbox_min");
     g_bbox_max_uniform   = glGetUniformLocation(g_GpuProgramID, "bbox_max");
+
+    // Nova variável para o tipo de mapeamento UV
+    g_uv_mapping_type_uniform = glGetUniformLocation(g_GpuProgramID, "uv_mapping_type");
+
+    // Variáveis em "shader_fragment.glsl" para acesso das imagens de textura
+    glUseProgram(g_GpuProgramID);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarHood"), 0);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarMetalic"), 1);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarPainting"), 2);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarWheel"), 3);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarNotPaintedParts"), 4);
 }
 
 // Função que pega a matriz M e guarda a mesma no topo da pilha
@@ -1825,44 +1922,65 @@ void DrawCar()
                     * Matrix_Rotate_Y(car.rotation_angle)
                     * Matrix_Rotate_Y(-PI/2);
 
-    glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-    glUniform1i(g_object_id_uniform, CAR);
+        // 0 plano de costas
+        // 1 plano de frente
+        // 2 plano de cima
+        // 3 plano de baixo
+        // 4 plano da direita
+        // 5 plano da esquerda
+        // 6 esfera
+        std::vector<ObjectConfig> objects = {
+            // Carro
+            {CAR_HOOD, "hood", "TextureCarHood", 0},
+            
+            {CAR_METALIC, "front__toyota_logo", "TextureCarMetalic", 0},
+            {CAR_METALIC, "Front_toyota_logo", "TextureCarMetalic", 0},
+            {CAR_METALIC, "exhaust", "TextureCarMetalic", 0},
+            {CAR_METALIC, "license_plate", "TextureCarMetalic", 0},
+            
+            {CAR_GLASS, "front_window", "TextureCarGlass", 0},
+            {CAR_GLASS, "side_smaller_window", "TextureCarGlass", 0},
+            {CAR_GLASS, "side_window", "TextureCarGlass", 0},
+            {CAR_GLASS, "tail_window", "TextureCarGlass", 0},
+            {CAR_GLASS, "front_light_glass", "TextureCarGlass", 0},
+            {CAR_GLASS, "tail_lights_glass", "TextureCarGlass", 0},
 
-    // Desenhar cada parte do carro
-    DrawVirtualObject("Bottom_panel"); // parabarros dianteiros
-    DrawVirtualObject("front_skirts"); // defletor dianteiro
-    DrawVirtualObject("front_bumper"); // parachoque dianteiro
-    DrawVirtualObject("front__toyota_logo"); // logo tras
-    DrawVirtualObject("Front_toyota_logo"); // logo frente
-    DrawVirtualObject("front_window"); // parabrisa dianteiro
-    DrawVirtualObject("front_window_frame"); // borracha em volta do parabrisa dianteiro
-    DrawVirtualObject("hood"); // capo dianteiro
-    DrawVirtualObject("front_light_shape"); // envoltura lanteras traseiras
-    DrawVirtualObject("front_light"); // lanteras traseiras
-    DrawVirtualObject("front_light_glass"); // lanternas dianteiras
-    DrawVirtualObject("exhaust"); 
-    DrawVirtualObject("mirrors"); 
-    DrawVirtualObject("Wing");
-    DrawVirtualObject("Bottom_panel");
-    DrawVirtualObject("tank");
-    DrawVirtualObject("cooler_holes");
-    DrawVirtualObject("side_skirts");
-    DrawVirtualObject("side_smaller_window");
-    DrawVirtualObject("side_window");
-    DrawVirtualObject("side_window_frame");
-    DrawVirtualObject("license_plate");
-    DrawVirtualObject("side_panel");
-    DrawVirtualObject("side_smaller_window_frame");
-    DrawVirtualObject("door");
-    DrawVirtualObject("body");
-    DrawVirtualObject("front_fender");
-    DrawVirtualObject("tail_lights");
-    DrawVirtualObject("tail_lights_glass");
-    DrawVirtualObject("tail_lights_shape");
-    DrawVirtualObject("tail_window");
-    DrawVirtualObject("trunk");
-    DrawVirtualObject("tail_lights_walls");
-    DrawVirtualObject("tail_window_frame"); // escapamento
+            {CAR_PAINTING, "body", "TextureCarPainting", 0},
+            {CAR_PAINTING, "door", "TextureCarPainting", 0},
+            {CAR_PAINTING, "front_bumper", "TextureCarPainting", 0},
+            {CAR_PAINTING, "front_fender", "TextureCarPainting", 0},
+            {CAR_PAINTING, "side_panel", "TextureCarPainting", 0},
+            {CAR_PAINTING, "trunk", "TextureCarPainting", 0},
+            {CAR_PAINTING, "mirrors", "TextureCarPainting", 0},
+            {CAR_PAINTING, "Wing", "TextureCarPainting", 0},
+
+            {CAR_PAINTING, "front_window_frame", "TextureCarPainting", 0},
+            {CAR_PAINTING, "side_smaller_window_frame", "TextureCarPainting", 0},
+            {CAR_PAINTING, "side_window_frame", "TextureCarPainting", 0},
+            {CAR_PAINTING, "tail_window_frame", "TextureCarPainting", 0},
+
+            {CAR_NOT_PAINTED_PARTS, "Bottom_panel", "TextureCarNotPaintedParts", 0},
+            {CAR_NOT_PAINTED_PARTS, "front_skirts", "TextureCarNotPaintedParts", 0},
+            {CAR_NOT_PAINTED_PARTS, "tank", "TextureCarNotPaintedParts", 0},
+            {CAR_NOT_PAINTED_PARTS, "Bottom_panel", "TextureCarNotPaintedParts", 0},
+            {CAR_NOT_PAINTED_PARTS, "Bottom_panel.001", "TextureCarNotPaintedParts", 0},
+            {CAR_NOT_PAINTED_PARTS, "side_skirts", "TextureCarNotPaintedParts", 0},
+            {CAR_NOT_PAINTED_PARTS, "cooler_holes", "TextureCarNotPaintedParts", 0},
+
+            // {CAR_WHEEL, "wheel_front_left", "TextureCarWheel", 0},
+            // {CAR_WHEEL, "wheel_front_right", "TextureCarWheel", 0},
+            // {CAR_WHEEL, "wheel_back_left", "TextureCarWheel", 0},
+            // {CAR_WHEEL, "wheel_back_right", "TextureCarWheel", 0},
+        };
+
+        model = Matrix_Translate(0.0f, 0.0f, 0.0f) * Matrix_Rotate_Y(g_AngleY);
+        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        for (const auto& obj : objects) {
+            glUniform1i(g_object_id_uniform, obj.object_id);
+            glUniform1i(g_uv_mapping_type_uniform, obj.uv_mapping_type);
+
+            DrawVirtualObject(obj.object_name.c_str());
+        }
 
 
     glm::mat4 frontLeftWheelModel = model * car.frontLeftWheelTransform;
