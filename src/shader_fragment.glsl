@@ -7,6 +7,12 @@
 in vec4 position_world;
 in vec4 normal;
 
+// Posição do vértice atual no sistema de coordenadas local do modelo.
+in vec4 position_model;
+
+// Coordenadas de textura obtidas do arquivo OBJ (se existirem!)
+in vec2 texcoords;
+
 // Matrizes computadas no código C++ e enviadas para a GPU
 uniform mat4 model;
 uniform mat4 view;
@@ -76,11 +82,43 @@ void main()
     vec3 Ka; // Refletância ambiente
     float q; // Expoente especular para o modelo de iluminação de Phong
 
+    // Coordenadas de textura U e V
+    float U = 0.0;
+    float V = 0.0;
+    
     // =========================================== MAPEAMENTO COORDENADAS UV =====================================================
+    if ( uv_mapping_type == 0) {
+        float minx = bbox_min.x;
+        float maxx = bbox_max.x;
 
+        float miny = bbox_min.y;
+        float maxy = bbox_max.y;
+
+        float minz = bbox_min.z;
+        float maxz = bbox_max.z;
+
+        U = (position_model.x - minx) / (maxx - minx);
+        V = (position_model.z - minz) / (maxz - minz);
+    }
 
     // =========================================== MAPEAMENTO TEXTURAS =====================================================
-    if ( object_id == CAR_HOOD)
+    if ( object_id == BUNNY)
+    {
+        Kd = texture(TextureCarHood, vec2(U,V)).rgb;
+    }
+    else if ( object_id == PLANE)
+    {
+        Kd = texture(TextureCarHood, vec2(U,V)).rgb;
+    }
+    else if ( object_id == SUN)
+    {
+        Kd = texture(TextureCarHood, vec2(U,V)).rgb;
+    }
+    else if ( object_id == CLOUD)
+    {
+        Kd = texture(TextureCarHood, vec2(U,V)).rgb;
+    }
+    else if ( object_id == CAR_HOOD)
     {
         Kd = texture(TextureCarHood, vec2(U,V)).rgb;
     }
@@ -105,6 +143,7 @@ void main()
         Kd = texture(TextureCarNotPaintedParts, vec2(U,V)).rgb;
     }
     
+    // ========================================================================================================================
     // Espectro da fonte de iluminação
     vec3 I = vec3(1.0, 1.0, 1.0); // PREENCHA AQUI o espectro da fonte de luz
 
@@ -130,6 +169,8 @@ void main()
     color.rgb = pow(color.rgb, vec3(1.0,1.0,1.0)/2.2);
 } 
 
+
+    // TA COMENTADO PQ TENQ ATUALIZAR
     // if ( object_id == BUNNY )
     // {
     //     // PREENCHA AQUI
