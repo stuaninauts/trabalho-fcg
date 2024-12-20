@@ -19,7 +19,12 @@ uniform mat4 projection;
 #define CAR    3
 #define SUN    4
 #define CLOUD  5
+
 uniform int object_id;
+
+// Parâmetros da axis-aligned bounding box (AABB) do modelo
+uniform vec4 bbox_min;
+uniform vec4 bbox_max;
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
 out vec4 color;
