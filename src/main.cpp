@@ -352,7 +352,7 @@ float camera_speed = 5.0f;
 // Camera look at: valor inicial de offset em relação ao carro
 glm::vec3 camera_offset(0.0f, MIN_DISTANCE_LOOK_AT_Y, MIN_DISTANCE_LOOK_AT_Z);
 
-#define SPHERE 0
+#define SKYBOX 0
 #define BUNNY  1
 #define PLANE  2
 #define CAR    3
@@ -439,6 +439,8 @@ int main(int argc, char* argv[])
     //
     LoadShadersFromFiles();
 
+    LoadTextureImage("../../data/background/kloofendal_48d_partly_cloudy_puresky_4k.hdr"); // TextureSkybox
+
     // Texturas do carro
     LoadTextureImage("../../data/car/car-textures/Naval_Ensign_of_Japan.png"); // TextureCarHood
     LoadTextureImage("../../data/car/car-textures/1K-Silver_Base Color.jpg"); // TextureCarMetalic
@@ -451,12 +453,15 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/plane/Grass004_1K-JPG_Color.jpg"); // TextureGrass
     LoadTextureImage("../../data/road/Asphalt025C_1K-JPG_Color.jpg"); // TODO:TextureRoad
 
-    LoadTextureImage("../../data/bonus/Metal048A_1K-JPG_Color.jpg"); // TextureBonus
     LoadTextureImage("../../data/road/Asphalt025C_1K-JPG_Color.jpg"); // TODO: TextureTree
-
+    LoadTextureImage("../../data/bonus/Metal048A_1K-JPG_Color.jpg"); // TextureBonus
 
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
+    ObjModel skyboxmodel("../../data/background/skysemisphere.obj");
+    ComputeNormals(&skyboxmodel);
+    BuildTrianglesAndAddToVirtualScene(&skyboxmodel);
+
     ObjModel bunnymodel("../../data/bunny.obj");
     ComputeNormals(&bunnymodel);
     BuildTrianglesAndAddToVirtualScene(&bunnymodel);
@@ -485,7 +490,7 @@ int main(int argc, char* argv[])
     ComputeNormals(&treemodel);
     BuildTrianglesAndAddToVirtualScene(&treemodel);
 
-    ObjModel bonusmodel("../../data/bonus/bonus.obj");
+    ObjModel bonusmodel("../../data/bonus/bonus-compressed.obj");
     ComputeNormals(&bonusmodel);
     BuildTrianglesAndAddToVirtualScene(&bonusmodel);
 
@@ -609,25 +614,14 @@ int main(int argc, char* argv[])
         glUniformMatrix4fv(g_view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(g_projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
-        // TODO refactor
         DrawCar();
+     
+        model = Matrix_Scale(350.0f, 350.0f, 350.0f);
+        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, SKYBOX);
+        glUniform1i(g_uv_mapping_type_uniform, 99);
+        DrawVirtualObject("the_skysemisphere");
 
-        // 0 plano de costas
-        // 1 plano de frente
-        // 2 plano de cima
-        // 3 plano de baixo
-        // 4 plano da direita
-        // 5 plano da esquerda
-        // 6 esfera
-        
-        // std::vector<ObjectConfig> gameObjects = {
-        //     {BUNNY, "the_bunny", "TextureCarHood", 0},
-        //     {PLANE, "the_plane", "TextureCarHood", 0},
-        //     {SUN, "the_sun", "TextureCarHood", 0},
-        //     {CLOUD, "the_cloud", "TextureCarHood", 0},
-            
-        // };
-        // Desenhamos o modelo do coelho
         model = Matrix_Translate(4.0f,0.0f,-6.0f)
               * Matrix_Rotate_Z(g_AngleZ)
               * Matrix_Rotate_Y(g_AngleY)
@@ -869,8 +863,8 @@ void LoadShadersFromFiles()
     //       |
     //       o-- shader_fragment.glsl
     //
-    GLuint vertex_shader_id = LoadShader_Vertex("../../src/shader_vertex.glsl");
-    GLuint fragment_shader_id = LoadShader_Fragment("../../src/shader_fragment.glsl");
+    GLuint vertex_shader_id = LoadShader_Vertex("../../src/shaders/shader_vertex.glsl");
+    GLuint fragment_shader_id = LoadShader_Fragment("../../src/shaders/shader_fragment.glsl");
 
     // Deletamos o programa de GPU anterior, caso ele exista.
     if ( g_GpuProgramID != 0 )
@@ -894,20 +888,20 @@ void LoadShadersFromFiles()
 
     // Variáveis em "shader_fragment.glsl" para acesso das imagens de textura
     glUseProgram(g_GpuProgramID);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarHood"), 0);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarMetalic"), 1);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarGlass"), 2);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarPainting"), 3);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarWheel"), 4);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarNotPaintedParts"), 5);
-    
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureGrass"), 6);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureRoad"), 7);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureSkybox"), 0);
 
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureBonus"), 8);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureTree"), 9);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarHood"), 1);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarMetalic"), 2);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarGlass"), 3);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarPainting"), 4);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarWheel"), 5);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarNotPaintedParts"), 6);
     
-   
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureGrass"), 7);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureRoad"), 8);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureTree"), 9);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureBonus"), 10);
+
 }
 
 // Função que pega a matriz M e guarda a mesma no topo da pilha
@@ -2118,9 +2112,6 @@ void DrawCar()
     }
 }
 
-
-
-// TODO: possivelmente averiguar depois
 void DrawVirtualObjectWithTransform(const char* object_name, glm::mat4 transform)
 {
     glm::vec3 bbox_min = g_VirtualScene[object_name].bbox_min;
@@ -2248,7 +2239,6 @@ void UpdateFrontWheelsAngle(Car &car, bool key_A_pressed, bool key_D_pressed, fl
 
 }
 
-// TODO: corrigir pq mudou o obj
 void UpdateWheelsTransforms(Car &car, float deltaTime) 
 {
     // Calcula a rotação das rodas com base na distância percorrida
@@ -2297,22 +2287,13 @@ void UpdateWheelsTransforms(Car &car, float deltaTime)
                             -car.rearRightWheelPosition.z);
 
     car.rearLeftWheelTransform = Matrix_Translate(car.rearLeftWheelPosition.x,
-car.rearLeftWheelPosition.y,
-car.rearLeftWheelPosition.z)
+                            car.rearLeftWheelPosition.y,
+                            car.rearLeftWheelPosition.z)
                         * Matrix_Rotate_X(-car.negative_camber_angle)
                         * Matrix_Rotate_Y(car.wheel_rotation_angle)
                         * Matrix_Rotate_X(car.negative_camber_angle)
                         * Matrix_Translate(-car.rearLeftWheelPosition.x,
--car.rearLeftWheelPosition.y,
--car.rearLeftWheelPosition.z);
+                            -car.rearLeftWheelPosition.y,
+                            -car.rearLeftWheelPosition.z);
     
-    
-    // car.rearLeftWheelTransform =  Matrix_Translate(
-    //                         car.rearLeftWheelPosition.x, 
-    //                         car.rearLeftWheelPosition.y, 
-    //                         car.rearLeftWheelPosition.z);
-    // car.rearLeftWheelTransform = Matrix_Rotate_X(car.wheel_rotation_angle);
 }
-
-// set makeprg=cd\ ..\ &&\ make\ run\ >/dev/null
-// vim: set spell spelllang=pt_br :

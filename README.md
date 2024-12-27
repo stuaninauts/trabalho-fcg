@@ -14,18 +14,18 @@
         Qualquer utilização de código além desse limite será considerada plágio e o trabalho correspondente receberá nota zero.
         Qualquer cópia de código de trabalhos de colegas deste ou de semestres anteriores será considerado plágio e o trabalho correspondente receberá nota zero.
 
-- [ ]    A sua aplicação deve possibilitar interação em tempo real.	      
+- [X]    A sua aplicação deve possibilitar interação em tempo real.	      
 		Por exemplo, se você desenvolver um jogo, ele não pode ser "lento" a ponto de impactar negativamente a jogabilidade.
 
-- [ ]    A sua aplicação deve possuir algum objetivo e lógica de controle não-trivial.
+- [X]    A sua aplicação deve possuir algum objetivo e lógica de controle não-trivial.
 		Por exemplo, um jogo de computador possui uma lógica não-trivial. Mas, uma aplicação que simplesmente carrega um modelo geométrico 3D e permite sua visualização é trivial.
 
-- [ ]    A sua aplicação deve utilizar as matrizes que vimos em aula para transformações geométricas (Model matrix), projeções (Projection matrix), e especificação do sistema de coordenadas da câmera (View matrix).
+- [X]    A sua aplicação deve utilizar as matrizes que vimos em aula para transformações geométricas (Model matrix), projeções (Projection matrix), e especificação do sistema de coordenadas da câmera (View matrix).
 	        Você não pode utilizar bibliotecas existentes para o cálculo de câmera, transformações, etc. Por exemplo, as funções a seguir, comumente utilizadas em tutoriais disponíveis na Web, não podem ser utilizadas:
 	            gluLookAt(), gluOrtho2D(), gluPerspective(), gluPickMatrix(), gluProject(), gluUnProject(), glm::lookAt(), glm::ortho(), glm::perspective(), glm::pickMatrix(), glm::rotate(), glm::scale(), glm::translate(), dentre outras.
 	        Você pode reutilizar o código desenvolvido em nossas aulas práticas.
 
-- [ ]    A sua aplicação deve possibilitar interação com o usuário através do mouse e do teclado.
+- [X]    A sua aplicação deve possibilitar interação com o usuário através do mouse e do teclado.
 
 - [ ]    A qualidade da apresentação do trabalho final, além da presença da dupla nos dias de apresentações de outros colegas, irá contar para a nota final do trabalho. Cada integrante da dupla irá receber pontuação independente de participação. Qualquer tipo de plágio acarretará nota zero.
 
@@ -35,22 +35,24 @@ A sua aplicação deve incluir implementação dos seguintes conceitos de Comput
 - No mínimo sua aplicação deve incluir um modelo geométrico da complexidade igual ou maior que o modelo "cow.obj" disponível neste link.
 - Para carregar este (e outros) modelos geométricos no formato OBJ, você pode utilizar bibliotecas existentes (por exemplo: tinyobjloader (C++) e tinyobjloader (C)).
 - Quanto maior a variedade de modelos geométricos, melhor. Veja a seção "Modelos 3D e Texturas Disponíveis na Web" na página principal de nosso Moodle para uma lista de locais onde você pode obter modelos 3D.
-	- [ ] Incluir obj do carro principal
+	- [ ] Obj carro principal
+	- [ ] Obj objeto bonus
 		
-- [ ]    Transformações geométricas de objetos virtuais.
+- [X]    Transformações geométricas de objetos virtuais.
 - Através da interação com o teclado e/ou mouse, o usuário deve poder controlar transformações geométricas aplicadas aos objetos virtuais (não somente controle da câmera).
-	- [ ] Usar as teclas W, A, S, D para movimentar o carro nas respectivas direções
+	- [X] Usar as teclas W, A, S, D para movimentar o carro nas respectivas direções
 		- [ ] Definir velocidade ideal, etc ...
+		- [ ] Corrigir movimentacao para os lados com vetor de direcao
 	- [ ] Usar a tecla Space para puxar o freio de mão (implementação em conjunto com curvas de bézier, definir algo visual para usuário ver enquanto está no drift)  		
 
-- [ ]    Controle de câmeras virtuais.
+- [X]    Controle de câmeras virtuais.
 - No mínimo sua aplicação deve implementar uma câmera look-at e uma câmera livre, conforme praticamos no Laboratório 2.
-	- [ ] Implementar camera look-at 3a pessoa atrás do carro
-	- [ ] Implementar camera livre que "pausa o jogo" quando acionada (guarda o estado atual do jogo naquele dado momento)
+	- [X] Implementar camera look-at 3a pessoa atrás do carro
+	- [X] Implementar camera livre que permite "viajar" pelo cenario
 
-- [ ]    No mínimo um objeto virtual deve ser copiado com duas ou mais instâncias, isto é, utilizando duas ou mais Model matrix aplicadas ao mesmo conjunto de vértices.
+- [X]    No mínimo um objeto virtual deve ser copiado com duas ou mais instâncias, isto é, utilizando duas ou mais Model matrix aplicadas ao mesmo conjunto de vértices.
 - Como exemplo, veja o código do Laboratório 2 e Laboratório 3, onde o mesmo modelo geométrico (cubo) é utilizado para desenhar todas as partes do boneco, e somente as matrizes de modelagem (Model matrix) são alteradas para desenhar cada cópia do cubo.
-	- [ ] Colocar bônus de velocidade nas extremidades da curva
+	- [X] Colocar bônus de velocidade nas extremidades da curva
 
 - [ ]    Testes de intersecção entre objetos virtuais.
 - No mínimo sua aplicação deve utilizar três tipos de teste de intersecção (por exemplo, um teste cubo-cubo, um teste cubo-plano, e um teste ponto-esfera).
@@ -70,10 +72,10 @@ A sua aplicação deve incluir implementação dos seguintes conceitos de Comput
 	- No mínimo um objeto com modelo de Gouraud: o modelo de iluminação é avaliado para cada vértice usando suas normais, gerando uma cor, a qual é interpolada para cada pixel durante a rasterização.
 	- No mínimo um objeto com modelo de Phong: as normais de cada vértice são interpoladas para cada pixel durante a rasterização, e o modelo de iluminação é avaliado para cada pixel, utilizando estas normais interpoladas.
 	- [ ] Definir quais objetos terão cada iluminação: **(difusa (Lambert) | Blinn-Phong | Gouraud | Phong)**
-		- [ ] Implementar lógica e visualização fonte de luz Sol 
+		- [ ] Skybox (difusa (lambert))
 		- [ ] Carro ()
 		- [ ] Objeto Bônus ()
-		- [ ] "Parede" translúcida de chegada ()
+		- [ ] Demais objetos
 
 - [ ]    Mapeamento de texturas.
 - TODOS objetos virtuais de sua aplicação devem ter suas cores definidas através de texturas representadas por imagens (no mínimo três imagens distintas).
@@ -91,7 +93,9 @@ A sua aplicação deve incluir implementação dos seguintes conceitos de Comput
 	- [ ] Não preciso dizer
 
 OPCIONAIS (ordem de implementação):
-- [ ] Drift deixar marcas de pneu, fumaça ...
+- [ ] Rodas tremulas fora da pista
+- [ ] Drift deixar marcas de pneu, fumaça ... / sistema de particulas
+- [ ] Fogo no escapamento
 - [ ] Som do carro de acordo com a aceleração
 
 |-----------------------------------------------------+-----------|
