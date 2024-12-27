@@ -148,6 +148,7 @@ struct Car
     glm::mat4 rearLeftWheelTransform; 
     glm::mat4 rearRightWheelTransform; 
 
+    int pontuation;
     // Construtor
     Car() 
         : carPosition(0.0f, -0.95f, 0.0f),
@@ -171,7 +172,8 @@ struct Car
           frontLeftWheelTransform(1.0f),
           frontRightWheelTransform(1.0f),
           rearLeftWheelTransform(1.0f),
-          rearRightWheelTransform(1.0f)
+          rearRightWheelTransform(1.0f),
+          pontuation(0) // TODO: implementar logica de aumentar com drift e multiplicador colisao com bonus
     {}
 };
 
@@ -233,6 +235,7 @@ void TextRendering_PrintMatrixVectorProductDivW(GLFWwindow* window, glm::mat4 M,
 void TextRendering_ShowModelViewProjection(GLFWwindow* window, glm::mat4 projection, glm::mat4 view, glm::mat4 model, glm::vec4 p_model);
 void TextRendering_ShowEulerAngles(GLFWwindow* window);
 void TextRendering_ShowVelocity(GLFWwindow* window);
+void TextRendering_ShowPontuation(GLFWwindow* window);
 void TextRendering_ShowFramesPerSecond(GLFWwindow* window);
 
 // Funções callback para comunicação com o sistema operacional e interação do
@@ -704,15 +707,10 @@ int main(int argc, char* argv[])
         DrawVirtualObject("outdoor_post1");
         DrawVirtualObject("outdoor_post2");
 
-        // Imprimimos na tela os ângulos de Euler que controlam a rotação do
-        // terceiro cubo.
+
         TextRendering_ShowEulerAngles(window);
-
-
         TextRendering_ShowVelocity(window);
-
-        // Imprimimos na tela informação sobre o número de quadros renderizados
-        // por segundo (frames per second).
+        TextRendering_ShowPontuation(window);
         TextRendering_ShowFramesPerSecond(window);
 
         // O framebuffer onde OpenGL executa as operações de renderização não
@@ -842,7 +840,7 @@ void DrawBoundingBox(const glm::vec3& bbox_min, const glm::vec3& bbox_max)
         0, 4, 1, 5, 2, 6, 3, 7  // vertical lines
     };
 
-    GLuint vao, vbo, ebo;
+    GLuint vao = 0, vbo = 0, ebo = 0;
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
     glGenBuffers(1, &ebo);
@@ -1639,18 +1637,18 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         g_AngleZ += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
     }
 
-    // Se o usuário apertar a tecla espaço, resetamos os ângulos de Euler para zero.
+      // Se o usuário apertar a tecla espaço, reseta a a posicao do carro com sua velocidade e etc
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
     {
-        g_AngleX = 0.0f;
-        g_AngleY = 0.0f;
-        g_AngleZ = 0.0f;
-        g_ForearmAngleX = 0.0f;
-        g_ForearmAngleZ = 0.0f;
-        g_TorsoPositionX = 0.0f;
-        g_TorsoPositionY = 0.0f;
+        car.carPosition = glm::vec3(0.0f, -0.95f, 0.0f);
+        car.carVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
+        car.carAcceleration = glm::vec3(0.0f, 0.0f, 0.0f);
+        car.speed = 0.0f;
+        car.acceleration = 0.0f;
+        car.wheel_rotation_angle = 0.0f;
+        car.rotation_angle = 0.0f;
+        car.front_wheel_angle = 0.0f;
     }
-
     // Se o usuário apertar a tecla H, fazemos um "toggle" do texto informativo mostrado na tela.
     if (key == GLFW_KEY_H && action == GLFW_PRESS)
     {
@@ -1788,6 +1786,15 @@ void TextRendering_ShowVelocity(GLFWwindow* window)
     snprintf(buffer, 50, "Vec Acceleration: (%.2f, %.2f, %.2f)", car.carAcceleration.x, car.carAcceleration.y, car.carAcceleration.z);
     TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 9 * lineheight, 1.0f);
 
+}
+
+void TextRendering_ShowPontuation(GLFWwindow* window)
+{
+    float lineheight = TextRendering_LineHeight(window);
+    float charwidth = TextRendering_CharWidth(window);
+    char buffer[50];
+    snprintf(buffer, 50, "Pontuation: %d", car.pontuation);
+    TextRendering_PrintString(window, buffer, 1.0f-18*charwidth, -1.0f+2*lineheight/10, 1.0f);
 }
 
 // Escrevemos na tela o número de quadros renderizados por segundo (frames per
