@@ -364,9 +364,12 @@ glm::vec3 camera_offset(0.0f, MIN_DISTANCE_LOOK_AT_Y, MIN_DISTANCE_LOOK_AT_Z);
 #define CAR_METALIC 9
 #define CAR_WHEEL 10
 #define CAR_NOT_PAINTED_PARTS 11
-#define TREE 12
-#define ROAD 13
-#define BONUS 14
+#define TREE_BODY 12
+#define TREE_LEAVES 13
+#define TRACK 14
+#define BONUS 15
+#define OUTDOOR_FACE 16
+#define OUTDOOR_POST 17
 
 int main(int argc, char* argv[])
 {
@@ -451,16 +454,21 @@ int main(int argc, char* argv[])
 
     // Outras texturas
     LoadTextureImage("../../data/plane/Grass004_1K-JPG_Color.jpg"); // TextureGrass
-    LoadTextureImage("../../data/road/Asphalt025C_1K-JPG_Color.jpg"); // TODO:TextureRoad
+    LoadTextureImage("../../data/track/Asphalt026C_1K-JPG_Color.jpg"); // TextureTrack
 
-    LoadTextureImage("../../data/road/Asphalt025C_1K-JPG_Color.jpg"); // TODO: TextureTree
+    LoadTextureImage("../../data/tree/Bark012_1K-JPG_Color.jpg"); // TextureTree
     LoadTextureImage("../../data/bonus/Metal048A_1K-JPG_Color.jpg"); // TextureBonus
+    LoadTextureImage("../../data/outdoor/jdm-japan-flag.png"); // TextureOutdoorFace
 
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
     ObjModel skyboxmodel("../../data/background/skysemisphere.obj");
     ComputeNormals(&skyboxmodel);
     BuildTrianglesAndAddToVirtualScene(&skyboxmodel);
+
+    ObjModel trackmodel("../../data/track/track.obj");
+    ComputeNormals(&trackmodel);
+    BuildTrianglesAndAddToVirtualScene(&trackmodel);
 
     ObjModel bunnymodel("../../data/bunny.obj");
     ComputeNormals(&bunnymodel);
@@ -474,10 +482,6 @@ int main(int argc, char* argv[])
     ComputeNormals(&carmodel);
     BuildTrianglesAndAddToVirtualScene(&carmodel);
 
-    // ObjModel carwheel("../../data/wheel.obj");
-    // ComputeNormals(&carwheel);
-    // BuildTrianglesAndAddToVirtualScene(&carwheel);
-
     ObjModel sunmodel("../../data/sun/sun.obj");
     ComputeNormals(&sunmodel);
     BuildTrianglesAndAddToVirtualScene(&sunmodel);
@@ -486,13 +490,17 @@ int main(int argc, char* argv[])
     ComputeNormals(&cloudmodel);
     BuildTrianglesAndAddToVirtualScene(&cloudmodel);
 
-    ObjModel treemodel("../../data/tree/sakura tree.obj");
+    ObjModel treemodel("../../data/tree/tree.obj");
     ComputeNormals(&treemodel);
     BuildTrianglesAndAddToVirtualScene(&treemodel);
 
     ObjModel bonusmodel("../../data/bonus/bonus-compressed.obj");
     ComputeNormals(&bonusmodel);
     BuildTrianglesAndAddToVirtualScene(&bonusmodel);
+
+    ObjModel outdoormodel("../../data/outdoor/outdoor.obj");
+    ComputeNormals(&outdoormodel);
+    BuildTrianglesAndAddToVirtualScene(&outdoormodel);
 
     if ( argc > 1 )
     {
@@ -622,7 +630,13 @@ int main(int argc, char* argv[])
         glUniform1i(g_uv_mapping_type_uniform, 99);
         DrawVirtualObject("the_skysemisphere");
 
-        model = Matrix_Translate(4.0f,0.0f,-6.0f)
+        model = Matrix_Translate(0.0f, -0.98f, 0.0f);
+        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TRACK);
+        glUniform1i(g_uv_mapping_type_uniform, 1);
+        DrawVirtualObject("the_track");
+
+        model = Matrix_Translate(7.0f,0.0f,-15.0f)
               * Matrix_Rotate_Z(g_AngleZ)
               * Matrix_Rotate_Y(g_AngleY)
               * Matrix_Rotate_X(g_AngleX);
@@ -638,39 +652,57 @@ int main(int argc, char* argv[])
         glUniform1i(g_uv_mapping_type_uniform, 1);
         DrawVirtualObject("the_plane");
 
-        // Desenhamos o modelo do sol
-        model = Matrix_Translate(0.0f, .0f, -15.0f)
-                * Matrix_Scale(0.5f, 0.5f, 0.5f);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, SUN);
-        glUniform1i(g_uv_mapping_type_uniform, 0);
-        DrawVirtualObject("the_sun");
-
-        // Desenhamos o modelo da nuvem
-        model = Matrix_Translate(-4.0f, 1.1f, -4.0f)
+        model = Matrix_Translate(-6.0f, 1.1f, -4.0f)
                 * Matrix_Scale(0.3f, 0.3f, 0.3f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, CLOUD);
         glUniform1i(g_uv_mapping_type_uniform, 0);
         DrawVirtualObject("the_cloud");
 
-        model = Matrix_Translate(2.0f,-1.0f,3.0f);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, TREE);
-        glUniform1i(g_uv_mapping_type_uniform, 0);
-        DrawVirtualObject("the_tree");
+        std::vector<glm::vec3> tree_positions = {
+            glm::vec3(6.0f,-1.0f,-8.0f), // curva 1
+            glm::vec3(-6.0f,-1.0f,-8.0f) // curva 2
+            // TODO: adicionar mais
+        };
+        for (const auto& pos : tree_positions) {
+            model = Matrix_Translate(pos.x, pos.y, pos.z);
+            glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+            glUniform1i(g_object_id_uniform, TREE_BODY);
+            glUniform1i(g_uv_mapping_type_uniform, 0);
+            DrawVirtualObject("tree_body");
+            glUniform1i(g_object_id_uniform, TREE_LEAVES);
+            glUniform1i(g_uv_mapping_type_uniform, 0);
+            DrawVirtualObject("tree_leaves");
+        }
 
-        model = Matrix_Translate(-4.0f,0.0f,-3.0f);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, BONUS);
-        glUniform1i(g_uv_mapping_type_uniform, 0);
-        DrawVirtualObject("the_bonus");
+        std::vector<glm::vec3> bonus_positions = {
+            glm::vec3(16.0f, -0.9f, -89.0f), // curva 1
+            glm::vec3(90.0f, -0.9f, -74.0f), // curva 2
+            glm::vec3(27.0f, -0.9f, -44.0f), // curva 3
+            glm::vec3(63.0f, -0.9f, -4.0f), // curva 4
+            glm::vec3(10.0f, -0.9f, 53.0f), // curva 5
+            // glm::vec3(0.0f, -0.9f, -2.0f) // posicao padrao
+        };
 
-        // model = Matrix_Translate(car.carPosition.x, car.carPosition.y, car.carPosition.z);
-        // glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        // glUniform1i(g_object_id_uniform, CAR_WHEEL);
-        // glUniform1i(g_uv_mapping_type_uniform, 0);
-        // DrawVirtualObject("wheel");
+        for (const auto& pos : bonus_positions) {
+            model = Matrix_Translate(pos.x, pos.y, pos.z)
+                    * Matrix_Scale(0.6f, 0.6f, 0.6f);
+            glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(g_object_id_uniform, BONUS);
+            glUniform1i(g_uv_mapping_type_uniform, 0);
+            DrawVirtualObject("the_bonus");
+        }
+
+        model = Matrix_Translate(0.0f, 5.0f, -30.0f)
+        * Matrix_Scale(2.5f, 2.5f, 2.5f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, OUTDOOR_FACE);
+        glUniform1i(g_uv_mapping_type_uniform, 0);
+        DrawVirtualObject("outdoor_face");
+        glUniform1i(g_object_id_uniform, OUTDOOR_POST);
+        glUniform1i(g_uv_mapping_type_uniform, 0);
+        DrawVirtualObject("outdoor_post1");
+        DrawVirtualObject("outdoor_post2");
 
         // Imprimimos na tela os ângulos de Euler que controlam a rotação do
         // terceiro cubo.
@@ -898,9 +930,10 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureCarNotPaintedParts"), 6);
     
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureGrass"), 7);
-    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureRoad"), 8);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureTrack"), 8);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureTree"), 9);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureBonus"), 10);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureOutdoorFace"), 11);
 
 }
 

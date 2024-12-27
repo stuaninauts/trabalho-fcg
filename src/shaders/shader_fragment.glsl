@@ -33,10 +33,12 @@ uniform mat4 projection;
 #define CAR_METALIC 9
 #define CAR_WHEEL 10
 #define CAR_NOT_PAINTED_PARTS 11
-#define TREE 12
-#define ROAD 13
-#define BONUS 14
-
+#define TREE_BODY 12
+#define TREE_LEAVES 13
+#define TRACK 14
+#define BONUS 15
+#define OUTDOOR_FACE 16
+#define OUTDOOR_POST 17
 
 uniform int object_id;
 uniform int uv_mapping_type;
@@ -56,9 +58,10 @@ uniform sampler2D TextureCarWheel;
 uniform sampler2D TextureCarNotPaintedParts;
 
 uniform sampler2D TextureGrass;
-uniform sampler2D TextureRoad;
+uniform sampler2D TextureTrack;
 uniform sampler2D TextureTree;
 uniform sampler2D TextureBonus;
+uniform sampler2D TextureOutdoorFace;
 
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
@@ -203,6 +206,15 @@ void main()
         Ka = Kd; // Ambient color
         q = 50.0; // Specular exponent
     }
+    else if ( object_id == TRACK )
+    {
+        float repeat_factor = 50.0; 
+        vec2 uv_repeated = vec2(U, V) * repeat_factor;
+        Kd = texture(TextureTrack, uv_repeated).rgb;
+        Ks = vec3(0.1, 0.1, 0.1); // Low specular reflectance for asphalt
+        Ka = vec3(0.05, 0.05, 0.05); // Ambient reflectance
+        q = 10.0; // Specular exponent for rough surface
+    }
     else if ( object_id == BUNNY )
     {
         // Propriedades espectrais do coelho
@@ -276,9 +288,19 @@ void main()
     {
         Kd = texture(TextureCarNotPaintedParts, vec2(U,V)).rgb;
     }
-    else if ( object_id == TREE)
+    else if ( object_id == TREE_BODY)
     {
         Kd = texture(TextureTree, vec2(U,V)).rgb;
+        Ks = vec3(0.2, 0.2, 0.2); // Specular color for tree body
+        Ka = vec3(0.1, 0.05, 0.02); // Ambient color for tree body
+        q = 10.0; // Specular exponent for rough surface
+    }
+    else if ( object_id == TREE_LEAVES)
+    {
+        Kd = vec3(0.902, 0.6431, 0.698); // Diffuse color for cherry blossom (light pink)
+        Ks = vec3(0.5, 0.5, 0.5); // Specular color for cherry blossom
+        Ka = vec3(0.25, 0.25, 0.25); // Ambient color for cherry blossom
+        q = 10.0; // Specular exponent for rough surface
     }
     else if ( object_id == BONUS)
     {
@@ -287,6 +309,21 @@ void main()
         Ka = vec3(0.25, 0.22, 0.06); // Ambient color (gold)
         q = 128.0; // High specular exponent for shiny surface
     }
+    else if ( object_id == OUTDOOR_FACE)
+    {
+        Kd = texture(TextureOutdoorFace, vec2(U,V)).rgb;
+        Ks = vec3(0.0, 0.0, 0.0);
+        Ka = vec3(0.0, 0.0, 0.0);
+        q = 1.0;
+    }
+    else if (object_id == OUTDOOR_POST) 
+    {
+        Kd = texture(TextureCarMetalic, vec2(U,V)).rgb;
+        Ks = vec3(0.8, 0.8, 0.8); // High specular reflectance for metallic look
+        Ka = vec3(0.1, 0.1, 0.1); // Ambient reflectance
+        q = 64.0; // Specular exponent for shiny surface
+    }
+
     // Objeto desconhecido = preto
     // else 
     // {
