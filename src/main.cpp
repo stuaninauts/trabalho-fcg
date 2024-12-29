@@ -373,6 +373,7 @@ glm::vec3 camera_offset(0.0f, MIN_DISTANCE_LOOK_AT_Y, MIN_DISTANCE_LOOK_AT_Z);
 #define BONUS 15
 #define OUTDOOR_FACE 16
 #define OUTDOOR_POST 17
+#define TEST 18
 
 int main(int argc, char* argv[])
 {
@@ -481,7 +482,7 @@ int main(int argc, char* argv[])
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
 
-    ObjModel carmodel("../../data/car/supratunadov3.obj");
+    ObjModel carmodel("../../data/car/supratunadov5.obj");
     ComputeNormals(&carmodel);
     BuildTrianglesAndAddToVirtualScene(&carmodel);
 
@@ -671,10 +672,10 @@ int main(int argc, char* argv[])
             model = Matrix_Translate(pos.x, pos.y, pos.z);
             glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
             glUniform1i(g_object_id_uniform, TREE_BODY);
-            glUniform1i(g_uv_mapping_type_uniform, 0);
+            glUniform1i(g_uv_mapping_type_uniform, 5);
             DrawVirtualObject("tree_body");
             glUniform1i(g_object_id_uniform, TREE_LEAVES);
-            glUniform1i(g_uv_mapping_type_uniform, 0);
+            glUniform1i(g_uv_mapping_type_uniform, 5);
             DrawVirtualObject("tree_leaves");
         }
 
@@ -703,9 +704,11 @@ int main(int argc, char* argv[])
         glUniform1i(g_uv_mapping_type_uniform, 0);
         DrawVirtualObject("outdoor_face");
         glUniform1i(g_object_id_uniform, OUTDOOR_POST);
-        glUniform1i(g_uv_mapping_type_uniform, 0);
+        glUniform1i(g_uv_mapping_type_uniform, 3);
         DrawVirtualObject("outdoor_post1");
         DrawVirtualObject("outdoor_post2");
+        glUniform1i(g_uv_mapping_type_uniform, 0);
+        DrawVirtualObject("outdoor_back");
 
 
         TextRendering_ShowEulerAngles(window);
@@ -2084,8 +2087,8 @@ void DrawCar()
 
             {CAR_HOOD, "hood", "TextureCarHood", 0}, // X
             
-            {CAR_METALIC, "front__toyota_logo", "TextureCarHood", 99},
-            {CAR_METALIC, "Front_toyota_logo", "TextureCarHood", 99},
+            {CAR_METALIC, "back_toyota_logo", "TextureCarHood", 99},
+            {CAR_METALIC, "front_toyota_logo", "TextureCarHood", 99},
             {CAR_METALIC, "exhaust", "TextureCarHood", 5},
             {CAR_METALIC, "license_plate", "TextureCarHood", 2},
             
@@ -2117,11 +2120,12 @@ void DrawCar()
             {CAR_NOT_PAINTED_PARTS, "Bottom_panel.001", "TextureCarNotPaintedParts", 0},
             {CAR_NOT_PAINTED_PARTS, "side_skirts", "TextureCarNotPaintedParts", 0},
             {CAR_NOT_PAINTED_PARTS, "cooler_holes", "TextureCarNotPaintedParts", 0},
+            
+            {CAR_WHEEL, "wheel_front_left", "TextureCarWheel", 3},
+            {CAR_WHEEL, "wheel_back_left", "TextureCarWheel", 3},
+            {CAR_WHEEL, "wheel_front_right", "TextureCarWheel", 3},
+            {CAR_WHEEL, "wheel_back_right", "TextureCarWheel", 3}
 
-            {CAR_WHEEL, "wheel_front_left", "TextureCarWheel", 0},
-            {CAR_WHEEL, "wheel_front_right", "TextureCarWheel", 0},
-            {CAR_WHEEL, "wheel_back_left", "TextureCarWheel", 0},
-            {CAR_WHEEL, "wheel_back_right", "TextureCarWheel", 0},
         };
 
     glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));

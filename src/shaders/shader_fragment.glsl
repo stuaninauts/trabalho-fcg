@@ -39,6 +39,8 @@ uniform mat4 projection;
 #define BONUS 15
 #define OUTDOOR_FACE 16
 #define OUTDOOR_POST 17
+#define TEST 18
+
 
 uniform int object_id;
 uniform int uv_mapping_type;
@@ -202,7 +204,7 @@ void main()
     if ( object_id == SKYBOX)
     {
         Kd = texture(TextureSkybox, vec2(U,V)).rgb;
-        Ks = vec3(1.0, 1.0, 1.0); // Specular color
+        // Ks = vec3(1.0, 1.0, 1.0); // Specular color
         Ka = Kd; // Ambient color
         q = 50.0; // Specular exponent
     }
@@ -260,9 +262,10 @@ void main()
     else if ( object_id == CAR_METALIC)
     {
         Kd = texture(TextureCarMetalic, vec2(U,V)).rgb;
-        Ks = vec3(0.8, 0.8, 0.8); // High specular reflectance for metallic look
+        // Kd = vec3(0.0, 0.0, 0.0);
+        Ks = vec3(0.9, 0.9, 0.9); // High specular reflectance for metallic look
         Ka = vec3(0.1, 0.1, 0.1); // Ambient reflectance
-        q = 64.0; // Specular exponent for shiny surface
+        q = 128.0; // Specular exponent for shiny surface
     }
     else if ( object_id == CAR_PAINTING)
     {
@@ -282,15 +285,26 @@ void main()
     }
     else if ( object_id == CAR_WHEEL)
     {
-        Kd = texture(TextureCarWheel, vec2(U,V)).rgb;
+        float repeat_factor = 20.0; 
+        vec2 uv_repeated = vec2(U, V) * repeat_factor;
+        Kd = texture(TextureCarWheel, uv_repeated).rgb;
+        Ks = vec3(0.1, 0.1, 0.1); // Low specular reflectance for rubber
+        Ka = vec3(0.05, 0.05, 0.05); // Ambient reflectance
+        q = 10.0; // Specular exponent for rough surface
     }
     else if ( object_id == CAR_NOT_PAINTED_PARTS)
     {
         Kd = texture(TextureCarNotPaintedParts, vec2(U,V)).rgb;
+        Kd = vec3(0.0588, 0.0588, 0.0588);
+        Ks = vec3(0.1, 0.1, 0.1); // Low specular reflectance for rubber
+        Ka = vec3(0.05, 0.05, 0.05); // Ambient reflectance
+        q = 10.0; // Specular exponent for rough surface
     }
     else if ( object_id == TREE_BODY)
     {
-        Kd = texture(TextureTree, vec2(U,V)).rgb;
+        float repeat_factor = 30.0; 
+        vec2 uv_repeated = vec2(U, V) * repeat_factor;
+        Kd = texture(TextureTree, uv_repeated).rgb;
         Ks = vec3(0.2, 0.2, 0.2); // Specular color for tree body
         Ka = vec3(0.1, 0.05, 0.02); // Ambient color for tree body
         q = 10.0; // Specular exponent for rough surface
@@ -298,7 +312,7 @@ void main()
     else if ( object_id == TREE_LEAVES)
     {
         Kd = vec3(0.902, 0.6431, 0.698); // Diffuse color for cherry blossom (light pink)
-        Ks = vec3(0.5, 0.5, 0.5); // Specular color for cherry blossom
+        Ks = vec3(0.4, 0.4, 0.4); // Specular color for cherry blossom
         Ka = vec3(0.25, 0.25, 0.25); // Ambient color for cherry blossom
         q = 10.0; // Specular exponent for rough surface
     }
@@ -323,6 +337,13 @@ void main()
         Ka = vec3(0.1, 0.1, 0.1); // Ambient reflectance
         q = 64.0; // Specular exponent for shiny surface
     }
+    else if (object_id == TEST) 
+    {
+        Kd = vec3(1.0, 0.0, 0.0);
+        // Ks = vec3(1.0, 0.0, 0.0);
+        // Ka = vec3(0.1, 0.0, 0.0);
+        // q = 20.0;
+    }
 
     // Objeto desconhecido = preto
     // else 
@@ -338,7 +359,7 @@ void main()
     vec3 I = vec3(1.0, 1.0, 1.0); // espectro da fonte de luz
 
     // Espectro da luz ambiente
-    vec3 Ia = vec3(0.1647, 0.1647, 0.1647); // espectro da luz ambiente
+    vec3 Ia = vec3(0.102, 0.098, 0.098); // espectro da luz ambiente
 
     // Termo difuso utilizando a lei dos cossenos de Lambert
     vec3 lambert_diffuse_term = Kd * I * max(dot(n,l), 0.0); // termo difuso de Lambert
