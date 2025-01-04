@@ -197,6 +197,7 @@ struct ObjectConfig {
     std::string object_name;
     std::string texture_name;
     int uv_mapping_type;
+    
 };
 
 // Declaração de funções utilizadas para pilha de matrizes de modelagem.

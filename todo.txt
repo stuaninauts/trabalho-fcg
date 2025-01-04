@@ -20,10 +20,14 @@ pretto:
     dps que stuani fizer movimentacao certa ajustar a camera pra ficar gostosinha
 
 a definir depois que as tarefas forem feitas: 
-    Modelos de Iluminação Difusa e Blinn-Phong (basicamente pronto só fazer refactor pra ficar mais facil)
-    Modelos de Interpolação de Phong e Gouraud (implementar logica pra separar isso)
+    X Modelos de Iluminação Difusa e Blinn-Phong (basicamente pronto só fazer refactor pra ficar mais facil)
+    X Modelos de Interpolação de Phong e Gouraud (implementar logica pra separar isso)
 
-    refactor do codigo inutilizado (sun, cloud ...)
+    refactor do codigo inutilizado 
+        remover sun, cloud ...
+        codigo shader fragment
+        remover texture name in object config
+        tirar objetos nao utilizados
 
 comentarios pra colocar no relatorio dps
 noq o chatgpt foi usado

@@ -15,6 +15,8 @@ in vec4 position_model;
 // Coordenadas de textura obtidas do arquivo OBJ (se existirem!)
 in vec2 texcoords;
 
+in float gouraud_lambert;
+
 // Matrizes computadas no código C++ e enviadas para a GPU
 uniform mat4 model;
 uniform mat4 view;
@@ -95,6 +97,8 @@ void main()
 
     // Vetor que define o sentido da reflexão especular ideal.
     vec4 r = -l + 2 * n * dot(n, l); // PREENCHA AQUI o vetor de reflexão especular ideal
+
+    vec4 h = normalize(l + v);
 
     // Parâmetros que definem as propriedades espectrais da superfície
     vec3 Kd; // Refletância difusa
@@ -203,10 +207,9 @@ void main()
     // =========================================== MAPEAMENTO TEXTURAS =====================================================
     if ( object_id == SKYBOX)
     {
-        Kd = texture(TextureSkybox, vec2(U,V)).rgb;
-        // Ks = vec3(1.0, 1.0, 1.0); // Specular color
-        Ka = Kd; // Ambient color
-        q = 50.0; // Specular exponent
+        color.rgb = texture(TextureSkybox, vec2(U,V)).rgb;
+        color.a = 1.0;
+        return;
     }
     else if ( object_id == TRACK )
     {
@@ -234,7 +237,6 @@ void main()
         Ka = vec3(0.0, 0.0, 0.0);
         q = 1.0;
     }
-
     else if ( object_id == SUN )
     {
         // Propriedades espectrais do plano
@@ -269,9 +271,10 @@ void main()
     }
     else if ( object_id == CAR_PAINTING)
     {
-        float repeat_factor = 100.0; 
-        vec2 uv_repeated = vec2(U, V) * repeat_factor;
-        Kd = texture(TextureCarPainting, uv_repeated).rgb;
+        // float repeat_factor = 100.0; 
+        // vec2 uv_repeated = vec2(U, V) * repeat_factor;
+        // Kd = texture(TextureCarPainting, uv_repeated).rgb;
+        Kd = vec3(0.8, 0.8, 0.8);
         Ks = vec3(0.8, 0.8, 0.8); // High specular reflectance for shiny car paint
         Ka = vec3(0.1, 0.1, 0.1); // Ambient reflectance
         q = 64.0; // Specular exponent for shiny surface
@@ -311,7 +314,7 @@ void main()
     }
     else if ( object_id == TREE_LEAVES)
     {
-        Kd = vec3(0.902, 0.6431, 0.698); // Diffuse color for cherry blossom (light pink)
+        Kd = vec3(0.9451, 0.549, 0.6353); // Diffuse color for cherry blossom (light pink)
         Ks = vec3(0.4, 0.4, 0.4); // Specular color for cherry blossom
         Ka = vec3(0.25, 0.25, 0.25); // Ambient color for cherry blossom
         q = 10.0; // Specular exponent for rough surface
@@ -319,7 +322,7 @@ void main()
     else if ( object_id == BONUS)
     {
         Kd = texture(TextureBonus, vec2(U,V)).rgb;
-        Ks = vec3(1.0, 0.84, 0.0); // Specular color (gold)
+        Ks = Kd; // Specular color (gold)
         Ka = vec3(0.25, 0.22, 0.06); // Ambient color (gold)
         q = 128.0; // High specular exponent for shiny surface
     }
@@ -345,35 +348,44 @@ void main()
         // q = 20.0;
     }
 
-    // Objeto desconhecido = preto
-    // else 
-    // {
-    //     Kd = vec3(0.0,0.0,0.0);
-    //     Ks = vec3(0.0,0.0,0.0);
-    //     Ka = vec3(0.0,0.0,0.0);
-    //     q = 1.0;
-    // }
-    
-    // ========================================================================================================================
-    // Espectro da fonte de iluminação
+    // =========================================== MODELO DE ILUMINACAO =====================================================
+    // Ks = vec3(1.0, 0.0, 0.0);
     vec3 I = vec3(1.0, 1.0, 1.0); // espectro da fonte de luz
 
-    // Espectro da luz ambiente
     vec3 Ia = vec3(0.102, 0.098, 0.098); // espectro da luz ambiente
 
-    // Termo difuso utilizando a lei dos cossenos de Lambert
     vec3 lambert_diffuse_term = Kd * I * max(dot(n,l), 0.0); // termo difuso de Lambert
 
-    // Termo ambiente
     vec3 ambient_term = Ka * Ia; // termo ambiente
 
-    // Termo especular utilizando o modelo de iluminação de Phong
-    vec3 phong_specular_term  = Ks * I * pow(max(0, dot(r, v)), q); // termo especular de Phong
+    vec3 phong_specular_term  = Ks * I * pow(max(0, dot(n, h)), q); // termo especular de blinn-Phong
 
+    int[] lambert_objects = int[](OUTDOOR_FACE, OUTDOOR_POST, TREE_BODY, TREE_LEAVES);
 
-    color.rgb = lambert_diffuse_term + ambient_term + phong_specular_term;
-    // color.rgb = Kd * (lambert_diffuse_term + 0.2);
+    bool is_lambert_object = false;
+    for (int i = 0; i < lambert_objects.length(); i++) {
+        if (object_id == lambert_objects[i]) {
+            is_lambert_object = true;
+            break;
+        }
+    }
+    if (is_lambert_object) 
+    {
+        // apenas iluminacao difusa de Lambert
+        color.rgb = lambert_diffuse_term + ambient_term;
+    }
+    else 
+    {
+        // iluminacao completa de Blinn-Phong
+        color.rgb = lambert_diffuse_term + ambient_term + phong_specular_term;
+    }
 
+    // =========================================== INTERPOLACAO =====================================================
+    // gouraud para o objeto BONUS
+    if (object_id == BONUS || object_id == CAR_GLASS)
+    {
+        color.rgb = Kd * I * gouraud_lambert + ambient_term + phong_specular_term;
+    }
     color.a = 1;
     color.rgb = pow(color.rgb, vec3(1.0,1.0,1.0)/2.2);
 } 
