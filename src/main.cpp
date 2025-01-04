@@ -121,6 +121,7 @@ struct Car
     glm::vec3 carPosition; 
     glm::vec3 carVelocity;
     glm::vec3 carAcceleration;
+    glm::vec3 carDirection;
     
     float speed; // Velocidade atual do carro
     float acceleration; // Aceleração (ou RPM) do carro
@@ -154,16 +155,17 @@ struct Car
         : carPosition(0.0f, -0.95f, 0.0f),
           carVelocity(0.0f, 0.0f, 0.0f), 
           carAcceleration(0.0f, 0.0f, 0.0f), 
+          carDirection(0.0f, 0.0f, -1.0f),
           speed(0.0f), 
           acceleration(0.0f), 
           acceleration_rate(10.0f), 
-          deceleration_rate(10.0f),
-          max_speed(30.0f), 
+          deceleration_rate(5.0f),
+          max_speed(20.0f), 
           max_acceleration(20.0f),
           wheel_rotation_angle(0.0f),
           rotation_angle(0.0f),
           front_wheel_angle(0.0f),
-          max_front_wheel_angle(glm::radians(35.0f)),
+          max_front_wheel_angle(glm::radians(40.0f)),
           negative_camber_angle(glm::radians(10.0f)),
           frontLeftWheelPosition(-1.11f, -0.5503f, 0.1809f),
           frontRightWheelPosition(-1.11f, 0.5393f, 0.1858f),          
@@ -176,19 +178,6 @@ struct Car
           pontuation(0) // TODO: implementar logica de aumentar com drift e multiplicador colisao com bonus
     {}
 };
-
-void PrintCarAttributes(const Car& car)
-{
-    printf("Car Attributes:\n");
-    printf("Position: (%f, %f, %f)\n", car.carPosition.x, car.carPosition.y, car.carPosition.z);
-    printf("Velocity: (%f, %f, %f)\n", car.carVelocity.x, car.carVelocity.y, car.carVelocity.z);
-    printf("Speed: %f\n", car.speed);
-    printf("Acceleration: %f\n", car.acceleration);
-    printf("Max Speed: %f\n", car.max_speed);
-    printf("Acceleration Rate: %f\n", car.acceleration_rate);
-    printf("Deceleration Rate: %f\n", car.deceleration_rate);
-}
-
 
 Car car;
 
@@ -352,9 +341,9 @@ bool key_RIGHT_pressed = false;
 // Toggle do tipo de camera
 // true para look at, false para livre
 bool type_camera_look_at = true;
-float camera_speed = 5.0f;
+float camera_speed = 3.0f;
 // Camera look at: valor inicial de offset em relação ao carro
-glm::vec3 camera_offset(0.0f, MIN_DISTANCE_LOOK_AT_Y, MIN_DISTANCE_LOOK_AT_Z);
+glm::vec3 camera_offset(0.0f, MAX_DISTANCE_LOOK_AT_Y, MAX_DISTANCE_LOOK_AT_Z);
 
 #define SKYBOX 0
 #define BUNNY  1
@@ -575,9 +564,16 @@ int main(int argc, char* argv[])
         glm::vec4 camera_up_vector   = glm::vec4(0.0f,1.0f,0.0f,0.0f); // Vetor "up" fixado para apontar para o "céu" (eito Y global)
         if (type_camera_look_at) {
             camera_lookat_l  = glm::vec4(car.carPosition.x, car.carPosition.y, car.carPosition.z, 1.0f); // Camera look-at
-            camera_position_c  = glm::vec4(car.carPosition.x + camera_offset.x, 
-                                                 car.carPosition.y + camera_offset.y, 
-                                                 car.carPosition.z + camera_offset.z, 1.0f); // Ponto "c", centro da câmera
+            glm::vec3 car_direction = glm::normalize(car.carDirection);
+            glm::vec3 camera_offset_rotated = glm::vec3(
+                -(car_direction.x * camera_offset.z + car_direction.z * camera_offset.x),
+                camera_offset.y,
+                -(car_direction.z * camera_offset.z - car_direction.x * camera_offset.x)
+            );
+            camera_position_c  = glm::vec4(car.carPosition.x + camera_offset_rotated.x, 
+                     car.carPosition.y + camera_offset_rotated.y, 
+                     car.carPosition.z + camera_offset_rotated.z, 
+                     1.0f); // Ponto "c", centro da câmera
             camera_view_vector = camera_lookat_l - camera_position_c; 
         }
         else {
@@ -1778,17 +1774,20 @@ void TextRendering_ShowVelocity(GLFWwindow* window)
     snprintf(buffer, 50, "Acceleration: %.2f", car.acceleration);
     TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 3 * lineheight, 1.0f);
 
-    snprintf(buffer, 50, "Front Wheel Angle: %.2f", car.front_wheel_angle);
+    snprintf(buffer, 50, "Vec Velocity: (%.2f, %.2f, %.2f)", car.carVelocity.x, car.carVelocity.y, car.carVelocity.z);
     TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 5 * lineheight, 1.0f);
 
-    snprintf(buffer, 50, "Car Rotation Angle: %.2f", car.rotation_angle);
+    snprintf(buffer, 50, "Vec Acceleration: (%.2f, %.2f, %.2f)", car.carAcceleration.x, car.carAcceleration.y, car.carAcceleration.z);
     TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 6 * lineheight, 1.0f);
 
-    snprintf(buffer, 50, "Vec Velocity: (%.2f, %.2f, %.2f)", car.carVelocity.x, car.carVelocity.y, car.carVelocity.z);
+    snprintf(buffer, 50, "Front Wheel Angle: %.2f", car.front_wheel_angle);
     TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 8 * lineheight, 1.0f);
 
-    snprintf(buffer, 50, "Vec Acceleration: (%.2f, %.2f, %.2f)", car.carAcceleration.x, car.carAcceleration.y, car.carAcceleration.z);
+    snprintf(buffer, 50, "Car Rotation Angle: %.2f", car.rotation_angle);
     TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 9 * lineheight, 1.0f);
+
+    snprintf(buffer, 50, "Vec Direction: (%.2f, %.2f, %.2f)", car.carDirection.x, car.carDirection.y, car.carDirection.z);
+    TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 10 * lineheight, 1.0f);
 
 }
 
@@ -2179,32 +2178,34 @@ void DrawVirtualObjectWithTransform(const char* object_name, glm::mat4 transform
 // Lógica para atualização da velocidade e posição do carro
 void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed, bool key_A_pressed, bool key_D_pressed, float deltaTime)
 {
-    // Limite estabelecido para não bugar a velocidade quando está muito próxima de 0 
-    const float epsilon = 1.0f;
+    const float epsilon = 0.1f;
+    const float drift_factor = 0.99f; // Intensidade do drift (quanto maior, mais "ensaboado")
+    const float stability = 0.5f; // Fator de estabilização do drift
 
-    // TODO:
-    // // Direção atual baseada na orientação do carro
+    // Direção atual baseada na orientação do carro
     glm::vec3 forward_direction = glm::normalize(glm::vec3(
-        -glm::sin(car.front_wheel_angle), 
+        -sin(car.rotation_angle), 
         0.0f, 
-        -glm::cos(car.front_wheel_angle)));
-    // glm::vec3 forward_direction = glm::normalize(glm::vec3(.0f, .0f, -1.0f));
-    // glm::vec3 velocity_direction = glm::rotate(forward_direction, car.front_wheel_angle, right_direction);
+        -cos(car.rotation_angle)
+    ));
+
+    glm::vec3 right_direction = glm::normalize(crossproduct3(forward_direction, glm::vec3(0.0f, 1.0f, 0.0f)));
+
+    car.carDirection = forward_direction;
+
+    // Controle de aceleração
     if (key_W_pressed)
     {
-        // Aumenta a aceleração (frente)
-        // se aceleracao ta negativa seta pra 0 e depois incrementa para maior responsividade na direcao
         if (car.acceleration < 0.0f) {
             car.carAcceleration = glm::vec3(0.0f);
         }
-        // atualiza a aceleracao
-        car.carAcceleration += forward_direction * car.acceleration_rate * deltaTime;
+        float speed_factor = 1.0f - (glm::length(car.carVelocity) / car.max_speed);
+        car.carAcceleration += forward_direction * car.acceleration_rate * speed_factor * deltaTime;
         if (glm::length(car.carAcceleration) > car.max_acceleration)
             car.carAcceleration = glm::normalize(car.carAcceleration) * car.max_acceleration;
     }
     else if (key_S_pressed)
     {
-        // Reduz a aceleração (trás)
         if (car.acceleration > 0.0f) {
             car.carAcceleration = glm::vec3(0.0f);
         }
@@ -2212,9 +2213,8 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
         if (glm::length(car.carAcceleration) > car.max_acceleration)
             car.carAcceleration = -glm::normalize(car.carAcceleration) * car.max_acceleration;
     }
-    else 
+    else
     {
-        // Gradativamente reduz a aceleração (freio natural)
         if (glm::length(car.carVelocity) > epsilon)
         {
             car.carAcceleration = -glm::normalize(car.carVelocity) * car.deceleration_rate;
@@ -2229,65 +2229,77 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
     // Atualiza a velocidade do carro com base na aceleração
     car.carVelocity += car.carAcceleration * deltaTime;
 
-    // Limita a velocidade máxima do carro
+    // Limita a velocidade máxima
     if (glm::length(car.carVelocity) > car.max_speed)
         car.carVelocity = glm::normalize(car.carVelocity) * car.max_speed;
 
-    // Atualiza a rotação do carro com base na direção da velocidade
-    if (glm::length(car.carVelocity) > .2f)
+    // Simulação de drift (deslizamento lateral)
+    glm::vec3 lateral_velocity = dotproduct3(car.carVelocity, right_direction) * right_direction;
+    glm::vec3 forward_velocity = dotproduct3(car.carVelocity, forward_direction) * forward_direction;
+
+    // Aplica o fator de drift e estabilidade
+    lateral_velocity *= drift_factor;
+    car.carVelocity = forward_velocity + lateral_velocity;
+
+    // Gradualmente reduz o deslizamento lateral para estabilizar o carro
+    car.carVelocity -= lateral_velocity * stability * deltaTime;
+
+    // Atualiza a rotação do carro (direção geral)
+    if (glm::length(car.carVelocity) > epsilon)
     {
-        float rotation_angle = glm::tan(car.front_wheel_angle); // usar vetor da velocidade
+        float rotation_angle = glm::tan(car.front_wheel_angle);
         car.rotation_angle += rotation_angle * deltaTime;
     }
-
 
     // Atualiza a posição do carro
     car.carPosition += car.carVelocity * deltaTime;
 
-    // Atualiza a velocidade e aceleração escalar do carro
+    // Atualiza valores escalares
     car.speed = glm::length(car.carVelocity);
     car.acceleration = glm::length(car.carAcceleration);
-    car.acceleration = (glm::dot(car.carAcceleration, glm::vec3(0.0f, 0.0f, -1.0f)) < 0) ? -car.acceleration : car.acceleration;
+    car.acceleration = (dotproduct3(car.carAcceleration, forward_direction) < 0) ? -car.acceleration : car.acceleration;
 }
+
 
 void UpdateFrontWheelsAngle(Car &car, bool key_A_pressed, bool key_D_pressed, float deltaTime) 
 {
-    // Atualiza o ângulo das rodas dianteiras
+    float turn_speed = glm::radians(200.0f); // Velocidade de ajuste das rodas
+    float return_speed = glm::radians(100.0f); // Velocidade de retorno ao neutro
+
     if (key_A_pressed)
     {
-        car.front_wheel_angle += 5.0f * deltaTime;
+        car.front_wheel_angle += turn_speed * deltaTime;
         if (car.front_wheel_angle > car.max_front_wheel_angle)
             car.front_wheel_angle = car.max_front_wheel_angle;
     }
     else if (key_D_pressed)
     {
-        car.front_wheel_angle -= 5.0f * deltaTime;
+        car.front_wheel_angle -= turn_speed * deltaTime;
         if (car.front_wheel_angle < -car.max_front_wheel_angle)
             car.front_wheel_angle = -car.max_front_wheel_angle;
     }
     else
     {
-        // Gradualmente retorna as rodas dianteiras ao ângulo neutro
         if (car.front_wheel_angle > 0.0f)
         {
-            car.front_wheel_angle -= 3.0f * deltaTime;
+            car.front_wheel_angle -= return_speed * deltaTime;
             if (car.front_wheel_angle < 0.0f)
                 car.front_wheel_angle = 0.0f;
         }
         else if (car.front_wheel_angle < 0.0f)
         {
-            car.front_wheel_angle += 3.0f * deltaTime;
+            car.front_wheel_angle += return_speed * deltaTime;
             if (car.front_wheel_angle > 0.0f)
                 car.front_wheel_angle = 0.0f;
         }
     }
-
 }
+
 
 void UpdateWheelsTransforms(Car &car, float deltaTime) 
 {
     // Calcula a rotação das rodas com base na distância percorrida
-    float rotation_direction = (glm::dot(car.carVelocity, glm::vec3(0.0f, 0.0f, -1.0f)) < 0) ? 1.0f : -1.0f;
+    float rotation_direction = (dotproduct3(car.carVelocity, glm::vec3(0.0f, 0.0f, -1.0f)) < 0) ? 1.0f : -1.0f;
     float distance = rotation_direction * car.speed * deltaTime;
     float wheel_radius = 0.4f;
     car.wheel_rotation_angle += distance / wheel_radius;
