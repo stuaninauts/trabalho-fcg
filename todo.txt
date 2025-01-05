@@ -1,7 +1,8 @@
 TODO:
 stuani:
-    arrumar velocidade final e implementar drift  
-    refactor remover mtls
+    refactor do codigo inutilizado 
+        codigo shader fragment
+
 pretto:
     fazer movimentacao dos objetos bonus com curva de bezier (vao ficar girando um pquitito com essa curva)
     
@@ -14,20 +15,10 @@ pretto:
         carro com arvore -> tree_body (cubo x cilindro)
         carro com outdoor -> outdoor_post1/2 (cubo x cilindro)
         carro com linha de chegada (cubo x plano)
-        carro com pista (cubo x sla oq (deve ser plano, essa vai ser foda))
+        carro com pista (cubo x sla oq (deve ser plano, essa vai ser foda) (talvez tu pode tentar com a grama que nao vai ta em contato direto))
         carro com objeto bonus (cubo x esfera)
 
-    dps que stuani fizer movimentacao certa ajustar a camera pra ficar gostosinha
-
-a definir depois que as tarefas forem feitas: 
-    X Modelos de Iluminação Difusa e Blinn-Phong (basicamente pronto só fazer refactor pra ficar mais facil)
-    X Modelos de Interpolação de Phong e Gouraud (implementar logica pra separar isso)
-
-    refactor do codigo inutilizado 
-        remover sun, cloud ...
-        codigo shader fragment
-        remover texture name in object config
-        tirar objetos nao utilizados
+    ajustar a camera pra ficar gostosinha
 
 comentarios pra colocar no relatorio dps
 noq o chatgpt foi usado

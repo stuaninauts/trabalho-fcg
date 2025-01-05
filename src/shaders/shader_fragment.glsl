@@ -24,24 +24,20 @@ uniform mat4 projection;
 
 // Identificador que define qual objeto está sendo desenhado no momento
 #define SKYBOX 0
-#define BUNNY  1
-#define PLANE  2
-#define CAR    3
-#define SUN    4
-#define CLOUD  5
-#define CAR_HOOD 6
-#define CAR_GLASS 7
-#define CAR_PAINTING 8
-#define CAR_METALIC 9
-#define CAR_WHEEL 10
-#define CAR_NOT_PAINTED_PARTS 11
-#define TREE_BODY 12
-#define TREE_LEAVES 13
-#define TRACK 14
-#define BONUS 15
-#define OUTDOOR_FACE 16
-#define OUTDOOR_POST 17
-#define TEST 18
+#define PLANE  1
+#define CAR    2
+#define CAR_HOOD 3
+#define CAR_GLASS 4
+#define CAR_PAINTING 5
+#define CAR_METALIC 6
+#define CAR_WHEEL 7
+#define CAR_NOT_PAINTED_PARTS 8
+#define TREE_BODY 9
+#define TREE_LEAVES 10
+#define TRACK 11
+#define BONUS 12
+#define OUTDOOR_FACE 13
+#define OUTDOOR_POST 14
 
 
 uniform int object_id;
@@ -220,14 +216,6 @@ void main()
         Ka = vec3(0.05, 0.05, 0.05); // Ambient reflectance
         q = 10.0; // Specular exponent for rough surface
     }
-    else if ( object_id == BUNNY )
-    {
-        // Propriedades espectrais do coelho
-        Kd = vec3(0.08,0.4,0.8);
-        Ks = vec3(0.8, 0.8,0.8);
-        Ka = vec3(0.04,0.2,0.4);
-        q = 32.0;
-    }
     else if (object_id == PLANE)
     {
         float repeat_factor = 100.0; 
@@ -236,22 +224,6 @@ void main()
         Ks = vec3(0.0, 0.0, 0.0);
         Ka = vec3(0.0, 0.0, 0.0);
         q = 1.0;
-    }
-    else if ( object_id == SUN )
-    {
-        // Propriedades espectrais do plano
-        Kd = vec3(1.0, 1.0, 0.0); // Diffuse color (yellow)
-        Ks = vec3(1.0, 1.0, 0.0); // Specular color (yellow)
-        Ka = vec3(0.1, 0.1, 0.0); // Ambient color (dim yellow)
-        q = 20.0;
-    }
-    else if ( object_id == CLOUD )
-    {
-        // Propriedades espectrais da nuvem
-        Kd = vec3(1.0, 1.0, 1.0); // Diffuse color (white)
-        Ks = vec3(1.0, 1.0, 1.0); // Specular color (white)
-        Ka = vec3(0.1, 0.1, 0.1); // Ambient color (dim white)
-        q = 20.0;
     }
     // CARRO
     else if ( object_id == CAR_HOOD)
@@ -340,19 +312,11 @@ void main()
         Ka = vec3(0.1, 0.1, 0.1); // Ambient reflectance
         q = 64.0; // Specular exponent for shiny surface
     }
-    else if (object_id == TEST) 
-    {
-        Kd = vec3(1.0, 0.0, 0.0);
-        // Ks = vec3(1.0, 0.0, 0.0);
-        // Ka = vec3(0.1, 0.0, 0.0);
-        // q = 20.0;
-    }
 
     // =========================================== MODELO DE ILUMINACAO =====================================================
-    // Ks = vec3(1.0, 0.0, 0.0);
     vec3 I = vec3(1.0, 1.0, 1.0); // espectro da fonte de luz
 
-    vec3 Ia = vec3(0.102, 0.098, 0.098); // espectro da luz ambiente
+    vec3 Ia = vec3(0.102, 0.102, 0.098); // espectro da luz ambiente
 
     vec3 lambert_diffuse_term = Kd * I * max(dot(n,l), 0.0); // termo difuso de Lambert
 
@@ -389,15 +353,3 @@ void main()
     color.a = 1;
     color.rgb = pow(color.rgb, vec3(1.0,1.0,1.0)/2.2);
 } 
-
-
-
-    // TA COMENTADO PQ TENQ ATUALIZAR
-    // else if ( object_id == CAR )
-    // {
-    //     // Propriedades espectrais do carro
-    //     Kd = vec3(1.0, 0.0, 0.0); // Diffuse color (red)
-    //     Ks = vec3(1.0, 0.0, 0.0); // Specular color (red)
-    //     Ka = vec3(0.1, 0.0, 0.0); // Ambient color (dim red)
-    //     q = 20.0;
-    // }

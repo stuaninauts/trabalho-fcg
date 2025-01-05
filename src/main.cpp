@@ -49,6 +49,22 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
+#define SKYBOX 0
+#define PLANE  1
+#define CAR    2
+#define CAR_HOOD 3
+#define CAR_GLASS 4
+#define CAR_PAINTING 5
+#define CAR_METALIC 6
+#define CAR_WHEEL 7
+#define CAR_NOT_PAINTED_PARTS 8
+#define TREE_BODY 9
+#define TREE_LEAVES 10
+#define TRACK 11
+#define BONUS 12
+#define OUTDOOR_FACE 13
+#define OUTDOOR_POST 14
+
 #define PI 3.141592f
 
 // Camera look-at: valores maximos e minimos da camera em relação a z/y
@@ -150,6 +166,7 @@ struct Car
     glm::mat4 rearRightWheelTransform; 
 
     int pontuation;
+
     // Construtor
     Car() 
         : carPosition(0.0f, -0.95f, 0.0f),
@@ -180,14 +197,6 @@ struct Car
 };
 
 Car car;
-
-struct ObjectConfig {
-    int object_id;
-    std::string object_name;
-    std::string texture_name;
-    int uv_mapping_type;
-    
-};
 
 // Declaração de funções utilizadas para pilha de matrizes de modelagem.
 void PushMatrix(glm::mat4 M);
@@ -257,6 +266,13 @@ struct SceneObject
     GLuint       vertex_array_object_id; // ID do VAO onde estão armazenados os atributos do modelo
     glm::vec3    bbox_min; // Axis-Aligned Bounding Box do objeto
     glm::vec3    bbox_max;
+};
+
+// estrutura auxiliar para desenhar os objetos do carro
+struct ObjectConfig {
+    int object_id;
+    std::string object_name;
+    int uv_mapping_type;
 };
 
 // Abaixo definimos variáveis globais utilizadas em várias funções do código.
@@ -345,25 +361,6 @@ float camera_speed = 3.0f;
 // Camera look at: valor inicial de offset em relação ao carro
 glm::vec3 camera_offset(0.0f, MAX_DISTANCE_LOOK_AT_Y, MAX_DISTANCE_LOOK_AT_Z);
 
-#define SKYBOX 0
-#define BUNNY  1
-#define PLANE  2
-#define CAR    3
-#define SUN    4
-#define CLOUD  5
-#define CAR_HOOD 6
-#define CAR_GLASS 7
-#define CAR_PAINTING 8
-#define CAR_METALIC 9
-#define CAR_WHEEL 10
-#define CAR_NOT_PAINTED_PARTS 11
-#define TREE_BODY 12
-#define TREE_LEAVES 13
-#define TRACK 14
-#define BONUS 15
-#define OUTDOOR_FACE 16
-#define OUTDOOR_POST 17
-#define TEST 18
 
 int main(int argc, char* argv[])
 {
@@ -449,7 +446,6 @@ int main(int argc, char* argv[])
     // Outras texturas
     LoadTextureImage("../../data/plane/Grass004_1K-JPG_Color.jpg"); // TextureGrass
     LoadTextureImage("../../data/track/Asphalt026C_1K-JPG_Color.jpg"); // TextureTrack
-
     LoadTextureImage("../../data/tree/Bark012_1K-JPG_Color.jpg"); // TextureTree
     LoadTextureImage("../../data/bonus/Metal048A_1K-JPG_Color.jpg"); // TextureBonus
     LoadTextureImage("../../data/outdoor/jdm-japan-flag.png"); // TextureOutdoorFace
@@ -464,10 +460,6 @@ int main(int argc, char* argv[])
     ComputeNormals(&trackmodel);
     BuildTrianglesAndAddToVirtualScene(&trackmodel);
 
-    ObjModel bunnymodel("../../data/bunny.obj");
-    ComputeNormals(&bunnymodel);
-    BuildTrianglesAndAddToVirtualScene(&bunnymodel);
-
     ObjModel planemodel("../../data/plane/plane.obj");
     ComputeNormals(&planemodel);
     BuildTrianglesAndAddToVirtualScene(&planemodel);
@@ -475,14 +467,6 @@ int main(int argc, char* argv[])
     ObjModel carmodel("../../data/car/supratunadov5.obj");
     ComputeNormals(&carmodel);
     BuildTrianglesAndAddToVirtualScene(&carmodel);
-
-    ObjModel sunmodel("../../data/sun/sun.obj");
-    ComputeNormals(&sunmodel);
-    BuildTrianglesAndAddToVirtualScene(&sunmodel);
-
-    ObjModel cloudmodel("../../data/cloud/cloud.obj");
-    ComputeNormals(&cloudmodel);
-    BuildTrianglesAndAddToVirtualScene(&cloudmodel);
 
     ObjModel treemodel("../../data/tree/tree.obj");
     ComputeNormals(&treemodel);
@@ -625,7 +609,8 @@ int main(int argc, char* argv[])
 
         DrawCar();
      
-        model = Matrix_Scale(350.0f, 350.0f, 350.0f);
+        model = Matrix_Rotate_Y(-PI/4) *
+                Matrix_Scale(350.0f, 350.0f, 350.0f);
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, SKYBOX);
         glUniform1i(g_uv_mapping_type_uniform, 99);
@@ -637,15 +622,6 @@ int main(int argc, char* argv[])
         glUniform1i(g_uv_mapping_type_uniform, 1);
         DrawVirtualObject("the_track");
 
-        model = Matrix_Translate(7.0f,0.0f,-15.0f)
-              * Matrix_Rotate_Z(g_AngleZ)
-              * Matrix_Rotate_Y(g_AngleY)
-              * Matrix_Rotate_X(g_AngleX);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, BUNNY);
-        glUniform1i(g_uv_mapping_type_uniform, 0);
-        DrawVirtualObject("the_bunny");
-
         model = Matrix_Translate(0.0f, -1.0f, 0.0f)
               * Matrix_Scale(1.0f, 1.0f, 1.0f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
@@ -653,16 +629,10 @@ int main(int argc, char* argv[])
         glUniform1i(g_uv_mapping_type_uniform, 1);
         DrawVirtualObject("the_plane");
 
-        model = Matrix_Translate(-6.0f, 1.1f, -4.0f)
-                * Matrix_Scale(0.3f, 0.3f, 0.3f);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, CLOUD);
-        glUniform1i(g_uv_mapping_type_uniform, 0);
-        DrawVirtualObject("the_cloud");
 
         std::vector<glm::vec3> tree_positions = {
-            glm::vec3(6.0f,-1.0f,-8.0f), // curva 1
-            glm::vec3(-6.0f,-1.0f,-8.0f) // curva 2
+            glm::vec3(6.0f,-1.0f,-8.0f), 
+            glm::vec3(-6.0f,-1.0f,-8.0f)
             // TODO: adicionar mais
         };
         for (const auto& pos : tree_positions) {
@@ -695,7 +665,7 @@ int main(int argc, char* argv[])
         }
 
         model = Matrix_Translate(0.0f, 5.0f, -30.0f)
-        * Matrix_Scale(2.5f, 2.5f, 2.5f);
+            * Matrix_Scale(2.5f, 2.5f, 2.5f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, OUTDOOR_FACE);
         glUniform1i(g_uv_mapping_type_uniform, 0);
@@ -707,6 +677,17 @@ int main(int argc, char* argv[])
         glUniform1i(g_uv_mapping_type_uniform, 0);
         DrawVirtualObject("outdoor_back");
 
+        model = Matrix_Translate(30.0f, 1.0f, -100.0f) * Matrix_Scale(0.7f, 0.7f, 0.7f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, OUTDOOR_FACE);
+        glUniform1i(g_uv_mapping_type_uniform, 0);
+        DrawVirtualObject("outdoor_face");
+        glUniform1i(g_object_id_uniform, OUTDOOR_POST);
+        glUniform1i(g_uv_mapping_type_uniform, 3);
+        DrawVirtualObject("outdoor_post1");
+        DrawVirtualObject("outdoor_post2");
+        glUniform1i(g_uv_mapping_type_uniform, 0);
+        DrawVirtualObject("outdoor_back");
 
         TextRendering_ShowEulerAngles(window);
         TextRendering_ShowVelocity(window);
@@ -2072,64 +2053,52 @@ void DrawCar()
                     * Matrix_Rotate_Y(car.rotation_angle)
                     * Matrix_Rotate_Y(-PI/2)
                     * Matrix_Rotate_X(-PI/2);
-    
-    DrawAxes(model);
-    // glm::mat4 model = Matrix_Translate(.0f,.0f,.0f);
-    // 0 plano de costas
-    // 1 plano de frente
-    // 2 plano de cima
-    // 3 plano de baixo
-    // 4 plano da direita
-    // 5 plano da esquerda
-    // 6 esfera
-        std::vector<ObjectConfig> objects = {
-            // Carro
 
-            {CAR_HOOD, "hood", "TextureCarHood", 0}, // X
-            
-            {CAR_METALIC, "back_toyota_logo", "TextureCarHood", 99},
-            {CAR_METALIC, "front_toyota_logo", "TextureCarHood", 99},
-            {CAR_METALIC, "exhaust", "TextureCarHood", 5},
-            {CAR_METALIC, "license_plate", "TextureCarHood", 2},
-            
-            {CAR_GLASS, "front_window", "TextureCarGlass", 0},
-            {CAR_GLASS, "side_smaller_window", "TextureCarGlass", 1},
-            {CAR_GLASS, "side_window", "TextureCarGlass", 1},
-            {CAR_GLASS, "tail_window", "TextureCarGlass", 0},
-            {CAR_GLASS, "front_light_glass", "TextureCarGlass", 2},
-            {CAR_GLASS, "tail_lights_glass", "TextureCarGlass", 2},
+    std::vector<ObjectConfig> car_objects = {
+        {CAR_HOOD, "hood", 0}, // X
+        
+        {CAR_METALIC, "back_toyota_logo", 99},
+        {CAR_METALIC, "front_toyota_logo", 99},
+        {CAR_METALIC, "exhaust", 5},
+        {CAR_METALIC, "license_plate", 2},
+        
+        {CAR_GLASS, "front_window", 0},
+        {CAR_GLASS, "side_smaller_window", 1},
+        {CAR_GLASS, "side_window", 1},
+        {CAR_GLASS, "tail_window", 0},
+        {CAR_GLASS, "front_light_glass", 2},
+        {CAR_GLASS, "tail_lights_glass", 2},
 
-            {CAR_PAINTING, "body", "TextureCarPainting", 3},
-            {CAR_PAINTING, "door", "TextureCarPainting", 1},
-            {CAR_PAINTING, "front_bumper", "TextureCarPainting", 0},
-            {CAR_PAINTING, "front_fender", "TextureCarPainting", 0},
-            {CAR_PAINTING, "side_panel", "TextureCarPainting", 0},
-            {CAR_PAINTING, "trunk", "TextureCarPainting", 0},
-            {CAR_PAINTING, "mirrors", "TextureCarPainting", 0},
-            {CAR_PAINTING, "Wing", "TextureCarPainting", 0},
+        {CAR_PAINTING, "body", 3},
+        {CAR_PAINTING, "door", 1},
+        {CAR_PAINTING, "front_bumper", 0},
+        {CAR_PAINTING, "front_fender", 0},
+        {CAR_PAINTING, "side_panel", 0},
+        {CAR_PAINTING, "trunk", 0},
+        {CAR_PAINTING, "mirrors", 0},
+        {CAR_PAINTING, "Wing", 0},
 
-            {CAR_PAINTING, "front_window_frame", "TextureCarPainting", 0},
-            {CAR_PAINTING, "side_smaller_window_frame", "TextureCarPainting", 0},
-            {CAR_PAINTING, "side_window_frame", "TextureCarPainting", 0},
-            {CAR_PAINTING, "tail_window_frame", "TextureCarPainting", 0},
+        {CAR_PAINTING, "front_window_frame", 0},
+        {CAR_PAINTING, "side_smaller_window_frame", 0},
+        {CAR_PAINTING, "side_window_frame", 0},
+        {CAR_PAINTING, "tail_window_frame", 0},
 
-            {CAR_NOT_PAINTED_PARTS, "Bottom_panel", "TextureCarNotPaintedParts", 0},
-            {CAR_NOT_PAINTED_PARTS, "front_skirts", "TextureCarNotPaintedParts", 0},
-            {CAR_NOT_PAINTED_PARTS, "tank", "TextureCarNotPaintedParts", 3},
-            {CAR_NOT_PAINTED_PARTS, "Bottom_panel", "TextureCarNotPaintedParts", 0},
-            {CAR_NOT_PAINTED_PARTS, "Bottom_panel.001", "TextureCarNotPaintedParts", 0},
-            {CAR_NOT_PAINTED_PARTS, "side_skirts", "TextureCarNotPaintedParts", 0},
-            {CAR_NOT_PAINTED_PARTS, "cooler_holes", "TextureCarNotPaintedParts", 0},
-            
-            {CAR_WHEEL, "wheel_front_left", "TextureCarWheel", 3},
-            {CAR_WHEEL, "wheel_back_left", "TextureCarWheel", 3},
-            {CAR_WHEEL, "wheel_front_right", "TextureCarWheel", 3},
-            {CAR_WHEEL, "wheel_back_right", "TextureCarWheel", 3}
-
-        };
+        {CAR_NOT_PAINTED_PARTS, "Bottom_panel", 0},
+        {CAR_NOT_PAINTED_PARTS, "front_skirts", 0},
+        {CAR_NOT_PAINTED_PARTS, "tank", 3},
+        {CAR_NOT_PAINTED_PARTS, "Bottom_panel", 0},
+        {CAR_NOT_PAINTED_PARTS, "Bottom_panel.001", 0},
+        {CAR_NOT_PAINTED_PARTS, "side_skirts", 0},
+        {CAR_NOT_PAINTED_PARTS, "cooler_holes", 0},
+        
+        {CAR_WHEEL, "wheel_front_left", 3},
+        {CAR_WHEEL, "wheel_back_left", 3},
+        {CAR_WHEEL, "wheel_front_right", 3},
+        {CAR_WHEEL, "wheel_back_right", 3}
+    };
 
     glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-    for (const auto& obj : objects) {
+    for (const auto& obj : car_objects) {
         glUniform1i(g_object_id_uniform, obj.object_id);
         glUniform1i(g_uv_mapping_type_uniform, obj.uv_mapping_type);
 
