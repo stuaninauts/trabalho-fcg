@@ -45,6 +45,7 @@
 // Headers locais, definidos na pasta "include/"
 #include "utils.h"
 #include "matrices.h"
+#include "collisions.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -2127,6 +2128,21 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
 
     // Atualiza a posição do carro
     car.carPosition += car.carVelocity * deltaTime;
+
+    
+    glm::vec3 min = g_VirtualScene["front_bumper"].bbox_min;
+    glm::vec3 max = g_VirtualScene["front_bumper"].bbox_max;
+
+    // Verifica colisão com arvores
+    if(cube_cilinder_intersect_tree(car.carPosition, car.carPosition, 1)){
+        car.carPosition -= car.carVelocity * deltaTime;
+        car.carVelocity = glm::vec3(0.0f); 
+    }
+    
+    if(cube_cilinder_intersect_outdoor(car.carPosition, car.carPosition, 1)){
+        car.carPosition -= car.carVelocity * deltaTime;
+        car.carVelocity = glm::vec3(0.0f); 
+    }
 
     // Atualiza valores escalares
     car.speed = glm::length(car.carVelocity);

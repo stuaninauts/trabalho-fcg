@@ -1,5 +1,41 @@
 #include "collisions.h"
 #include <glm/glm.hpp>
+#include <vector>
+#include <algorithm>
+#include <cstdio>
+
+std::vector<glm::vec3> tree_positions = {
+    glm::vec3(6.0f,-1.0f,-8.0f), 
+    glm::vec3(-6.0f,-1.0f,-8.0f),
+    glm::vec3(78.0f, -1.0f, -74.0f),
+    glm::vec3(96.0f, -1.0f, -74.0f),
+    glm::vec3(17.0f, -1.0f, -70.0f),
+    glm::vec3(41.0f, -1.0f, -42.0f),
+    glm::vec3(47.0f, -1.0f, -4.0f),
+    glm::vec3(39.0f, -1.0f, 31.0f),
+    glm::vec3(10.0f, -1.0f, 35.0f)
+};
+
+std::vector<glm::vec3> outdoor_positions = {
+    glm::vec3(6.0f, 0.0f, -30.0f),
+    glm::vec3(-6.0f, 0.0f, -30.0f),
+    glm::vec3(31.68f, 0.0f, -100.0f),
+    glm::vec3(28.32f, 0.0f, -100.0f),
+    glm::vec3(22.0f, 0.0f, -42.32f),
+    glm::vec3(22.0f, 0.0f, -45.68f),
+    glm::vec3(-1.43f, 0.0f, 53.57f),
+    glm::vec3(1.43f, 0.0f, 56.43f)
+};
+
+std::vector<glm::vec3> bonus_positions = {
+    glm::vec3(16.0f, -0.9f, -89.0f), // curva 1
+    glm::vec3(90.0f, -0.9f, -74.0f), // curva 2
+    glm::vec3(27.0f, -0.9f, -44.0f), // curva 3
+    glm::vec3(63.0f, -0.9f, -4.0f), // curva 4
+    glm::vec3(10.0f, -0.9f, 53.0f), // curva 5
+    // glm::vec3(0.0f, -0.9f, -2.0f) // posicao padrao
+};
+
 
 /*    
     implementar colisoes
@@ -10,8 +46,6 @@
         carro com objeto bonus (cubo x esfera) 
 */
 
-// carro com outdoor -> outdoor_post1/2 (cubo x cilindro)
-// carro com arvore -> tree_body (cubo x cilindro)
 bool cube_cilinder_intersect(glm::vec3 min, glm::vec3 max, glm::vec3 center, float radius){
     float closest_x = std::max(min.x, std::min(center.x, max.x));
     float closest_y = std::max(min.y, std::min(center.y, max.y));
@@ -28,6 +62,25 @@ bool cube_cilinder_intersect(glm::vec3 min, glm::vec3 max, glm::vec3 center, flo
     return false;
 }
 
+// carro com arvore -> tree_body (cubo x cilindro)
+bool cube_cilinder_intersect_tree(glm::vec3 min, glm::vec3 max, float radius){
+    for (const auto& pos : tree_positions) {
+        if(cube_cilinder_intersect(min, max, pos, radius)){
+            return true;
+        }
+    }
+    return false;
+}
+
+// carro com outdoor -> outdoor_post1/2 (cubo x cilindro)
+bool cube_cilinder_intersect_outdoor(glm::vec3 min, glm::vec3 max, float radius){
+    for (const auto& pos : outdoor_positions) {
+        if(cube_cilinder_intersect(min, max, pos, radius)){
+            return true;
+        }
+    }
+    return false;
+}
 
 // carro com linha de chegada (cubo x plano)
 bool cube_plane_intersect(glm::vec3 normal, glm::vec3 min, glm::vec3 max){
