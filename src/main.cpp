@@ -166,6 +166,7 @@ struct Car
     glm::mat4 rearRightWheelTransform; 
 
     int pontuation;
+    float pontuation_multiplier;
 
     // Construtor
     Car() 
@@ -192,7 +193,8 @@ struct Car
           frontRightWheelTransform(1.0f),
           rearLeftWheelTransform(1.0f),
           rearRightWheelTransform(1.0f),
-          pontuation(0) // TODO: implementar logica de aumentar com drift e multiplicador colisao com bonus
+          pontuation(0),
+          pontuation_multiplier(1.0f)
     {}
 };
 
@@ -254,7 +256,7 @@ void DrawWheelsWithTransform(const char* object_name, glm::mat4 transform);
 void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed, bool key_A_pressed, bool key_D_pressed, float deltaTime);
 void UpdateFrontWheelsAngle(Car &car, bool key_A_pressed, bool key_D_pressed, float deltaTime);
 void UpdateWheelsTransforms(Car &car, float deltaTime);
-void UpdatePonctuation(Car &car, float deltaTime);
+void UpdatePontuation(Car &car, float deltaTime);
 
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
@@ -505,7 +507,7 @@ int main(int argc, char* argv[])
         UpdateCarSpeedAndPosition(car, key_W_pressed, key_S_pressed, key_A_pressed, key_D_pressed, deltaTime);        
         UpdateFrontWheelsAngle(car, key_A_pressed, key_D_pressed, deltaTime);
         UpdateWheelsTransforms(car, deltaTime);
-        UpdatePonctuation(car, deltaTime);
+        UpdatePontuation(car, deltaTime);
 
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -1574,8 +1576,10 @@ void TextRendering_ShowPontuation(GLFWwindow* window)
 {
     float pad = TextRendering_LineHeight(window);
     char buffer[50];
+    snprintf(buffer, 50, "Multiplier: %.1f x", car.pontuation_multiplier);
+    TextRendering_PrintString(window, buffer, -1.0f + pad / 10, -1.0f + 12 * pad / 10, 1.0f);
     snprintf(buffer, 50, "Pontuation: %d", car.pontuation);
-    TextRendering_PrintString(window, buffer, -1.0f+pad/10, -1.0f+2*pad/10, 1.0f);
+    TextRendering_PrintString(window, buffer, -1.0f + pad / 10, -1.0f + 2 * pad / 10, 1.0f);
 }
 
 // Escrevemos na tela o número de quadros renderizados por segundo (frames per
@@ -2225,12 +2229,12 @@ void UpdateWheelsTransforms(Car &car, float deltaTime)
     
 }
 
-void UpdatePonctuation(Car &car, float deltaTime)
+void UpdatePontuation(Car &car, float deltaTime)
 {
     // Atualiza a pontuação do carro baseada na velocidade e só aumenta quando o carro fizer curvas
     float abs_wheel_angle = glm::abs(car.front_wheel_angle);
     if (abs_wheel_angle > 0.3f)
     {
-        car.pontuation += (car.speed * 30 + abs_wheel_angle * 300) * deltaTime;
+        car.pontuation += abs_wheel_angle * 50 * car.speed * deltaTime * car.pontuation_multiplier;
     }
 }

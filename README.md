@@ -58,7 +58,7 @@ Por outro lado, ele foi bastante eficaz ao nos orientar no uso do Blender, um so
 
 
 ## Manual de uso
-O objetivo do jogo é gerar a maior pontuação possível. Para isso é necessário se manter na pista e não colidir com objetos fora dela. Quanto maior a velocidade mais pontos são gerados.
+O objetivo do jogo é gerar a maior pontuação possível. A pontuação é aumentada quando o carro faz curvas e é proporcional à velocidade e à angulação da curva. Porém, para aumentar a pontuação é necessário se manter na pista e não colidir com objetos fora dela.
 Os objetos localizados nas curvas são objetos bônus multiplicadores de pontuação, ou seja, quando o carro passa por cima deles o multiplicador de pontuação aumenta, resultado em mais pontos.
 
 **Controles de Movimentação**
