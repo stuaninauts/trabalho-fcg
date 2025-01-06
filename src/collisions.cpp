@@ -1,0 +1,73 @@
+#include "collisions.h"
+#include <glm/glm.hpp>
+
+/*    
+    implementar colisoes
+        carro com arvore -> tree_body (cubo x cilindro)
+        carro com outdoor -> outdoor_post1/2 (cubo x cilindro)
+        carro com linha de chegada (cubo x plano)
+        carro com pista (cubo x sla oq (deve ser plano, essa vai ser foda) (talvez tu pode tentar com a grama que nao vai ta em contato direto))
+        carro com objeto bonus (cubo x esfera) 
+*/
+
+// carro com outdoor -> outdoor_post1/2 (cubo x cilindro)
+// carro com arvore -> tree_body (cubo x cilindro)
+bool cube_cilinder_intersect(glm::vec3 min, glm::vec3 max, glm::vec3 center, float radius){
+    float closest_x = std::max(min.x, std::min(center.x, max.x));
+    float closest_y = std::max(min.y, std::min(center.y, max.y));
+    float closest_z = std::max(min.z, std::min(center.z, max.z));
+
+    glm::vec3 closest_point = glm::vec3(closest_x, closest_y, closest_z);
+
+    float distance = glm::distance(glm::vec3(center.x, center.y, center.z), closest_point);
+
+    if(distance <= radius){
+        return true;
+    }
+
+    return false;
+}
+
+
+// carro com linha de chegada (cubo x plano)
+bool cube_plane_intersect(glm::vec3 normal, glm::vec3 min, glm::vec3 max){
+    glm::vec3 vertices[8] = {
+        glm::vec3(min.x, min.y, min.z),
+        glm::vec3(min.x, min.y, max.z),
+        glm::vec3(min.x, max.y, min.z),
+        glm::vec3(min.x, max.y, max.z),
+        glm::vec3(max.x, min.y, min.z),
+        glm::vec3(max.x, min.y, max.z),
+        glm::vec3(max.x, max.y, min.z),
+        glm::vec3(max.x, max.y, max.z)
+    };
+
+    float min_distance = std::numeric_limits<float>::max();
+    float max_distance = std::numeric_limits<float>::lowest();
+
+    for (int i = 0; i < 8; i++){
+        float distance = glm::dot(normal, vertices[i]);
+        min_distance = std::min(min_distance, distance);
+        max_distance = std::max(max_distance, distance);
+    }
+
+    return (min_distance <= 0.0f) && (max_distance >= 0.0f);
+}
+
+
+// carro com objeto bonus (cubo x esfera) 
+bool cube_sphere_intersect(glm::vec3 min, glm::vec3 max, glm::vec3 center, float radius){
+    float closest_x = std::max(min.x, std::min(center.x, max.x));
+    float closest_y = std::max(min.y, std::min(center.y, max.y));
+    float closest_z = std::max(min.z, std::min(center.z, max.z));
+
+    glm::vec3 closest_point = glm::vec3(closest_x, closest_y, closest_z);
+
+    float distance = glm::distance(closest_point, center);
+
+    return (distance <= radius);
+}
+
+
+// carro com pista (cubo x sla oq (deve ser plano, essa vai ser foda) (talvez tu pode tentar com a grama que nao vai ta em contato direto))
+
