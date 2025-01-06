@@ -231,8 +231,6 @@ void TextRendering_PrintMatrixVectorProductDivW(GLFWwindow* window, glm::mat4 M,
 
 // Funções abaixo renderizam como texto na janela OpenGL algumas matrizes e
 // outras informações do programa. Definidas após main().
-void TextRendering_ShowModelViewProjection(GLFWwindow* window, glm::mat4 projection, glm::mat4 view, glm::mat4 model, glm::vec4 p_model);
-void TextRendering_ShowEulerAngles(GLFWwindow* window);
 void TextRendering_ShowVelocity(GLFWwindow* window);
 void TextRendering_ShowPontuation(GLFWwindow* window);
 void TextRendering_ShowFramesPerSecond(GLFWwindow* window);
@@ -246,14 +244,17 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void CursorPosCallback(GLFWwindow* window, double xpos, double ypos);
 void ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 
-// Desenho do carro
 void DrawCar();
-void DrawVirtualObjectWithTransform(const char* object_name, glm::mat4 transform);
+void DrawOutdoors();
+void DrawBonus();
+void DrawTrees();
+void DrawWheelsWithTransform(const char* object_name, glm::mat4 transform);
 
-// Movimentacao do carro
+// Atualizacoes no carro
 void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed, bool key_A_pressed, bool key_D_pressed, float deltaTime);
 void UpdateFrontWheelsAngle(Car &car, bool key_A_pressed, bool key_D_pressed, float deltaTime);
 void UpdateWheelsTransforms(Car &car, float deltaTime);
+void UpdatePonctuation(Car &car, float deltaTime);
 
 // Definimos uma estrutura que armazenará dados necessários para renderizar
 // cada objeto da cena virtual.
@@ -289,11 +290,6 @@ std::stack<glm::mat4>  g_MatrixStack;
 // Razão de proporção da janela (largura/altura). Veja função FramebufferSizeCallback().
 float g_ScreenRatio = 1.0f;
 
-// Ângulos de Euler que controlam a rotação de um dos cubos da cena virtual
-float g_AngleX = 0.0f;
-float g_AngleY = 0.0f;
-float g_AngleZ = 0.0f;
-
 // "g_LeftMouseButtonPressed = true" se o usuário está com o botão esquerdo do mouse
 // pressionado no momento atual. Veja função MouseButtonCallback().
 bool g_LeftMouseButtonPressed = false;
@@ -317,7 +313,7 @@ float g_TorsoPositionX = 0.0f;
 float g_TorsoPositionY = 0.0f;
 
 // Variável que controla se o texto informativo será mostrado na tela.
-bool g_ShowInfoText = true;
+bool g_ShowInfoText = false;
 // Variável que controla se as bounding boxes serao desenhadas na tela
 bool g_Show_BBOX = false;
 
@@ -500,33 +496,21 @@ int main(int argc, char* argv[])
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
-        // Movimentação do carro: tempo
         static double previousTime = glfwGetTime();
         double currentTime = glfwGetTime();
         float deltaTime = static_cast<float>(currentTime - previousTime);
         previousTime = currentTime;
 
-        // Movimentação do carro
+        // Funcoes de atualizacao das propriedades do carro
         UpdateCarSpeedAndPosition(car, key_W_pressed, key_S_pressed, key_A_pressed, key_D_pressed, deltaTime);        
         UpdateFrontWheelsAngle(car, key_A_pressed, key_D_pressed, deltaTime);
         UpdateWheelsTransforms(car, deltaTime);
+        UpdatePonctuation(car, deltaTime);
 
-        // Aqui executamos as operações de renderização
-
-        // Definimos a cor do "fundo" do framebuffer como branco.  Tal cor é
-        // definida como coeficientes RGBA: Red, Green, Blue, Alpha; isto é:
-        // Vermelho, Verde, Azul, Alpha (valor de transparência).
-        // Conversaremos sobre sistemas de cores nas aulas de Modelos de Iluminação.
-        //
-        //           R     G     B     A
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-        // "Pintamos" todos os pixels do framebuffer com a cor definida acima,
-        // e também resetamos todos os pixels do Z-buffer (depth buffer).
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        // Pedimos para a GPU utilizar o programa de GPU criado acima (contendo
-        // os shaders de vértice e fragmentos).
         glUseProgram(g_GpuProgramID);
 
         // Computamos a posição da câmera utilizando coordenadas esféricas.  As
@@ -538,10 +522,6 @@ int main(int argc, char* argv[])
         float z = r*cos(g_CameraPhi)*cos(g_CameraTheta);
         float x = r*cos(g_CameraPhi)*sin(g_CameraTheta);
 
-        // Abaixo definimos as varáveis que efetivamente definem a câmera virtual.
-        // Veja slides 195-227 e 229-234 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
-        // Camera look at: vetor de posicao relacionado a posição do carro.
-        // Quando implementar a curva do carro vai precisar trocar.
         glm::vec4 camera_position_c;
         glm::vec4 camera_lookat_l;
         glm::vec4 camera_view_vector;
@@ -564,51 +544,40 @@ int main(int argc, char* argv[])
             camera_view_vector = -glm::vec4(x, y, z, 0.0f);
             glm::vec4 vetor_w  = -camera_view_vector;
             glm::vec4 vetor_u  = crossproduct(camera_up_vector, vetor_w);
-            // Realiza movimentação de objetos
             if (key_UP_pressed)
-                // Movimenta câmera para frente
                 camera_position_c += -vetor_w * camera_speed * deltaTime;
             if (key_DOWN_pressed)
-                // Movimenta câmera para trás
                 camera_position_c += vetor_w * camera_speed * deltaTime;    
             if (key_RIGHT_pressed)
-                // Movimenta câmera para direita
                 camera_position_c += vetor_u * camera_speed * deltaTime;
             if (key_LEFT_pressed)
-                // Movimenta câmera para esquerda
                 camera_position_c += -vetor_u * camera_speed * deltaTime;
         }
 
-        
-
-
-        // Computamos a matriz "View" utilizando os parâmetros da câmera para
-        // definir o sistema de coordenadas da câmera.  Veja slides 2-14, 184-190 e 236-242 do documento Aula_08_Sistemas_de_Coordenadas.pdf.
         glm::mat4 view = Matrix_Camera_View(camera_position_c, camera_view_vector, camera_up_vector);
 
-        // Agora computamos a matriz de Projeção.
         glm::mat4 projection;
 
-        // Note que, no sistema de coordenadas da câmera, os planos near e far
-        // estão no sentido negativo! Veja slides 176-204 do documento Aula_09_Projecoes.pdf.
         float nearplane = -0.1f;  // Posição do "near plane"
         float farplane  = -1000.0f; // Posição do "far plane"
 
-        // Projeção Perspectiva.
-        // Para definição do field of view (FOV), veja slides 205-215 do documento Aula_09_Projecoes.pdf.
         float field_of_view = PI / 3.0f;
         projection = Matrix_Perspective(field_of_view, g_ScreenRatio, nearplane, farplane);
 
-        glm::mat4 model = Matrix_Identity(); // Transformação identidade de modelagem
+        glm::mat4 model = Matrix_Identity(); 
 
-        // Enviamos as matrizes "view" e "projection" para a placa de vídeo
-        // (GPU). Veja o arquivo "shader_vertex.glsl", onde estas são
-        // efetivamente aplicadas em todos os pontos.
         glUniformMatrix4fv(g_view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(g_projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
 
         DrawCar();
      
+        DrawTrees();
+
+        DrawBonus();
+
+        DrawOutdoors();
+
+        // skybox
         model = Matrix_Rotate_Y(-PI/4) *
                 Matrix_Scale(350.0f, 350.0f, 350.0f);
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
@@ -616,12 +585,14 @@ int main(int argc, char* argv[])
         glUniform1i(g_uv_mapping_type_uniform, 99);
         DrawVirtualObject("the_skysemisphere");
 
+        // pista
         model = Matrix_Translate(0.0f, -0.98f, 0.0f);
         glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, TRACK);
         glUniform1i(g_uv_mapping_type_uniform, 1);
         DrawVirtualObject("the_track");
 
+        // plano da grama
         model = Matrix_Translate(0.0f, -1.0f, 0.0f)
               * Matrix_Scale(1.0f, 1.0f, 1.0f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
@@ -629,90 +600,17 @@ int main(int argc, char* argv[])
         glUniform1i(g_uv_mapping_type_uniform, 1);
         DrawVirtualObject("the_plane");
 
-
-        std::vector<glm::vec3> tree_positions = {
-            glm::vec3(6.0f,-1.0f,-8.0f), 
-            glm::vec3(-6.0f,-1.0f,-8.0f)
-            // TODO: adicionar mais
-        };
-        for (const auto& pos : tree_positions) {
-            model = Matrix_Translate(pos.x, pos.y, pos.z);
-            glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-            glUniform1i(g_object_id_uniform, TREE_BODY);
-            glUniform1i(g_uv_mapping_type_uniform, 5);
-            DrawVirtualObject("tree_body");
-            glUniform1i(g_object_id_uniform, TREE_LEAVES);
-            glUniform1i(g_uv_mapping_type_uniform, 5);
-            DrawVirtualObject("tree_leaves");
-        }
-
-        std::vector<glm::vec3> bonus_positions = {
-            glm::vec3(16.0f, -0.9f, -89.0f), // curva 1
-            glm::vec3(90.0f, -0.9f, -74.0f), // curva 2
-            glm::vec3(27.0f, -0.9f, -44.0f), // curva 3
-            glm::vec3(63.0f, -0.9f, -4.0f), // curva 4
-            glm::vec3(10.0f, -0.9f, 53.0f), // curva 5
-            // glm::vec3(0.0f, -0.9f, -2.0f) // posicao padrao
-        };
-
-        for (const auto& pos : bonus_positions) {
-            model = Matrix_Translate(pos.x, pos.y, pos.z)
-                    * Matrix_Scale(0.6f, 0.6f, 0.6f);
-            glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-            glUniform1i(g_object_id_uniform, BONUS);
-            glUniform1i(g_uv_mapping_type_uniform, 0);
-            DrawVirtualObject("the_bonus");
-        }
-
-        model = Matrix_Translate(0.0f, 5.0f, -30.0f)
-            * Matrix_Scale(2.5f, 2.5f, 2.5f);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, OUTDOOR_FACE);
-        glUniform1i(g_uv_mapping_type_uniform, 0);
-        DrawVirtualObject("outdoor_face");
-        glUniform1i(g_object_id_uniform, OUTDOOR_POST);
-        glUniform1i(g_uv_mapping_type_uniform, 3);
-        DrawVirtualObject("outdoor_post1");
-        DrawVirtualObject("outdoor_post2");
-        glUniform1i(g_uv_mapping_type_uniform, 0);
-        DrawVirtualObject("outdoor_back");
-
-        model = Matrix_Translate(30.0f, 1.0f, -100.0f) * Matrix_Scale(0.7f, 0.7f, 0.7f);
-        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, OUTDOOR_FACE);
-        glUniform1i(g_uv_mapping_type_uniform, 0);
-        DrawVirtualObject("outdoor_face");
-        glUniform1i(g_object_id_uniform, OUTDOOR_POST);
-        glUniform1i(g_uv_mapping_type_uniform, 3);
-        DrawVirtualObject("outdoor_post1");
-        DrawVirtualObject("outdoor_post2");
-        glUniform1i(g_uv_mapping_type_uniform, 0);
-        DrawVirtualObject("outdoor_back");
-
-        TextRendering_ShowEulerAngles(window);
         TextRendering_ShowVelocity(window);
         TextRendering_ShowPontuation(window);
         TextRendering_ShowFramesPerSecond(window);
 
-        // O framebuffer onde OpenGL executa as operações de renderização não
-        // é o mesmo que está sendo mostrado para o usuário, caso contrário
-        // seria possível ver artefatos conhecidos como "screen tearing". A
-        // chamada abaixo faz a troca dos buffers, mostrando para o usuário
-        // tudo que foi renderizado pelas funções acima.
-        // Veja o link: https://en.wikipedia.org/w/index.php?title=Multiple_buffering&oldid=793452829#Double_buffering_in_computer_graphics
         glfwSwapBuffers(window);
 
-        // Verificamos com o sistema operacional se houve alguma interação do
-        // usuário (teclado, mouse, ...). Caso positivo, as funções de callback
-        // definidas anteriormente usando glfwSet*Callback() serão chamadas
-        // pela biblioteca GLFW.
         glfwPollEvents();
     }
 
-    // Finalizamos o uso dos recursos do sistema operacional
     glfwTerminate();
 
-    // Fim do programa
     return 0;
 }
 
@@ -1499,16 +1397,6 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
 
-    // O código abaixo implementa a seguinte lógica:
-    //   Se apertar tecla X       então g_AngleX += delta;
-    //   Se apertar tecla shift+X então g_AngleX -= delta;
-    //   Se apertar tecla Y       então g_AngleY += delta;
-    //   Se apertar tecla shift+Y então g_AngleY -= delta;
-    //   Se apertar tecla Z       então g_AngleZ += delta;
-    //   Se apertar tecla shift+Z então g_AngleZ -= delta;
-
-    float delta = PI / 16; // 22.5 graus, em radianos.
-
     // Movimentacao do Carro
     if (key == GLFW_KEY_W)
     {
@@ -1603,21 +1491,6 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
             ;
     }
 
-
-    if (key == GLFW_KEY_X && action == GLFW_PRESS)
-    {
-        g_AngleX += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-    }
-
-    if (key == GLFW_KEY_Y && action == GLFW_PRESS)
-    {
-        g_AngleY += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-    }
-    if (key == GLFW_KEY_Z && action == GLFW_PRESS)
-    {
-        g_AngleZ += (mod & GLFW_MOD_SHIFT) ? -delta : delta;
-    }
-
       // Se o usuário apertar a tecla espaço, reseta a a posicao do carro com sua velocidade e etc
     if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
     {
@@ -1629,6 +1502,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mod)
         car.wheel_rotation_angle = 0.0f;
         car.rotation_angle = 0.0f;
         car.front_wheel_angle = 0.0f;
+        car.pontuation = 0;
     }
     // Se o usuário apertar a tecla H, fazemos um "toggle" do texto informativo mostrado na tela.
     if (key == GLFW_KEY_H && action == GLFW_PRESS)
@@ -1662,98 +1536,22 @@ void ErrorCallback(int error, const char* description)
     fprintf(stderr, "ERROR: GLFW: %s\n", description);
 }
 
-// Esta função recebe um vértice com coordenadas de modelo p_model e passa o
-// mesmo por todos os sistemas de coordenadas armazenados nas matrizes model,
-// view, e projection; e escreve na tela as matrizes e pontos resultantes
-// dessas transformações.
-void TextRendering_ShowModelViewProjection(
-    GLFWwindow* window,
-    glm::mat4 projection,
-    glm::mat4 view,
-    glm::mat4 model,
-    glm::vec4 p_model
-)
-{
-    if ( !g_ShowInfoText )
-        return;
-
-    glm::vec4 p_world = model*p_model;
-    glm::vec4 p_camera = view*p_world;
-    glm::vec4 p_clip = projection*p_camera;
-    glm::vec4 p_ndc = p_clip / p_clip.w;
-
-    float pad = TextRendering_LineHeight(window);
-
-    TextRendering_PrintString(window, " Model matrix             Model     In World Coords.", -1.0f, 1.0f-pad, 1.0f);
-    TextRendering_PrintMatrixVectorProduct(window, model, p_model, -1.0f, 1.0f-2*pad, 1.0f);
-
-    TextRendering_PrintString(window, "                                        |  ", -1.0f, 1.0f-6*pad, 1.0f);
-    TextRendering_PrintString(window, "                            .-----------'  ", -1.0f, 1.0f-7*pad, 1.0f);
-    TextRendering_PrintString(window, "                            V              ", -1.0f, 1.0f-8*pad, 1.0f);
-
-    TextRendering_PrintString(window, " View matrix              World     In Camera Coords.", -1.0f, 1.0f-9*pad, 1.0f);
-    TextRendering_PrintMatrixVectorProduct(window, view, p_world, -1.0f, 1.0f-10*pad, 1.0f);
-
-    TextRendering_PrintString(window, "                                        |  ", -1.0f, 1.0f-14*pad, 1.0f);
-    TextRendering_PrintString(window, "                            .-----------'  ", -1.0f, 1.0f-15*pad, 1.0f);
-    TextRendering_PrintString(window, "                            V              ", -1.0f, 1.0f-16*pad, 1.0f);
-
-    TextRendering_PrintString(window, " Projection matrix        Camera                    In NDC", -1.0f, 1.0f-17*pad, 1.0f);
-    TextRendering_PrintMatrixVectorProductDivW(window, projection, p_camera, -1.0f, 1.0f-18*pad, 1.0f);
-
-    int width, height;
-    glfwGetFramebufferSize(window, &width, &height);
-
-    glm::vec2 a = glm::vec2(-1, -1);
-    glm::vec2 b = glm::vec2(+1, +1);
-    glm::vec2 p = glm::vec2( 0,  0);
-    glm::vec2 q = glm::vec2(width, height);
-
-    glm::mat4 viewport_mapping = Matrix(
-        (q.x - p.x)/(b.x-a.x), 0.0f, 0.0f, (b.x*p.x - a.x*q.x)/(b.x-a.x),
-        0.0f, (q.y - p.y)/(b.y-a.y), 0.0f, (b.y*p.y - a.y*q.y)/(b.y-a.y),
-        0.0f , 0.0f , 1.0f , 0.0f ,
-        0.0f , 0.0f , 0.0f , 1.0f
-    );
-
-    TextRendering_PrintString(window, "                                                       |  ", -1.0f, 1.0f-22*pad, 1.0f);
-    TextRendering_PrintString(window, "                            .--------------------------'  ", -1.0f, 1.0f-23*pad, 1.0f);
-    TextRendering_PrintString(window, "                            V                           ", -1.0f, 1.0f-24*pad, 1.0f);
-
-    TextRendering_PrintString(window, " Viewport matrix           NDC      In Pixel Coords.", -1.0f, 1.0f-25*pad, 1.0f);
-    TextRendering_PrintMatrixVectorProductMoreDigits(window, viewport_mapping, p_ndc, -1.0f, 1.0f-26*pad, 1.0f);
-}
-
-// Escrevemos na tela os ângulos de Euler definidos nas variáveis globais
-// g_AngleX, g_AngleY, e g_AngleZ.
-void TextRendering_ShowEulerAngles(GLFWwindow* window)
-{
-    if ( !g_ShowInfoText )
-        return;
-
-    float pad = TextRendering_LineHeight(window);
-
-    char buffer[80];
-    snprintf(buffer, 80, "Euler Angles rotation matrix = Z(%.2f)*Y(%.2f)*X(%.2f)\n", g_AngleZ, g_AngleY, g_AngleX);
-
-    TextRendering_PrintString(window, buffer, -1.0f+pad/10, -1.0f+2*pad/10, 1.0f);
-}
-
 // Mostra velocidade atual do carro
 void TextRendering_ShowVelocity(GLFWwindow* window)
 {
-    if (!g_ShowInfoText)
-        return;
 
     float lineheight = TextRendering_LineHeight(window);
     float charwidth = TextRendering_CharWidth(window);
 
     char buffer[50];
     snprintf(buffer, 50, "Speed: %.2f", glm::length(car.carVelocity));
-    TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 2 * lineheight, 1.0f);
+    TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 1 * lineheight, 1.0f);
 
     snprintf(buffer, 50, "Acceleration: %.2f", car.acceleration);
-    TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 3 * lineheight, 1.0f);
+    TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 2 * lineheight, 1.0f);
+
+    if (!g_ShowInfoText)
+        return;
 
     snprintf(buffer, 50, "Vec Velocity: (%.2f, %.2f, %.2f)", car.carVelocity.x, car.carVelocity.y, car.carVelocity.z);
     TextRendering_PrintString(window, buffer, -1.0f + charwidth, 1.0f - 5 * lineheight, 1.0f);
@@ -1774,19 +1572,18 @@ void TextRendering_ShowVelocity(GLFWwindow* window)
 
 void TextRendering_ShowPontuation(GLFWwindow* window)
 {
-    float lineheight = TextRendering_LineHeight(window);
-    float charwidth = TextRendering_CharWidth(window);
+    float pad = TextRendering_LineHeight(window);
     char buffer[50];
     snprintf(buffer, 50, "Pontuation: %d", car.pontuation);
-    TextRendering_PrintString(window, buffer, 1.0f-18*charwidth, -1.0f+2*lineheight/10, 1.0f);
+    TextRendering_PrintString(window, buffer, -1.0f+pad/10, -1.0f+2*pad/10, 1.0f);
 }
 
 // Escrevemos na tela o número de quadros renderizados por segundo (frames per
 // second).
 void TextRendering_ShowFramesPerSecond(GLFWwindow* window)
 {
-    if ( !g_ShowInfoText )
-        return;
+    // if ( !g_ShowInfoText )
+    //     return;
 
     // Variáveis estáticas (static) mantém seus valores entre chamadas
     // subsequentes da função!
@@ -2105,19 +1902,19 @@ void DrawCar()
         // se o nome do objeot é wheel_front_left
         if (obj.object_name == "wheel_front_left") {
             glm::mat4 frontLeftWheelModel = model * car.frontLeftWheelTransform;
-            DrawVirtualObjectWithTransform(obj.object_name.c_str(), frontLeftWheelModel);
+            DrawWheelsWithTransform(obj.object_name.c_str(), frontLeftWheelModel);
         }
         else if (obj.object_name == "wheel_front_right") {
             glm::mat4 frontRightWheelModel = model * car.frontRightWheelTransform;
-            DrawVirtualObjectWithTransform(obj.object_name.c_str(), frontRightWheelModel);
+            DrawWheelsWithTransform(obj.object_name.c_str(), frontRightWheelModel);
         }
         else if (obj.object_name == "wheel_back_left") {
             glm::mat4 rearLeftWheelModel = model * car.rearLeftWheelTransform;
-            DrawVirtualObjectWithTransform(obj.object_name.c_str(), rearLeftWheelModel);
+            DrawWheelsWithTransform(obj.object_name.c_str(), rearLeftWheelModel);
         }
         else if (obj.object_name == "wheel_back_right") {
             glm::mat4 rearRightWheelModel = model * car.rearRightWheelTransform;
-            DrawVirtualObjectWithTransform(obj.object_name.c_str(), rearRightWheelModel);
+            DrawWheelsWithTransform(obj.object_name.c_str(), rearRightWheelModel);
         }
         else
             DrawVirtualObject(obj.object_name.c_str());
@@ -2125,7 +1922,111 @@ void DrawCar()
     }
 }
 
-void DrawVirtualObjectWithTransform(const char* object_name, glm::mat4 transform)
+void DrawOutdoors() 
+{
+    // outdoor main
+    glm::mat4 model = Matrix_Translate(0.0f, 5.0f, -30.0f)
+        * Matrix_Scale(2.5f, 2.5f, 2.5f);
+    glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+    glUniform1i(g_object_id_uniform, OUTDOOR_FACE);
+    glUniform1i(g_uv_mapping_type_uniform, 0);
+    DrawVirtualObject("outdoor_face");
+    glUniform1i(g_object_id_uniform, OUTDOOR_POST);
+    glUniform1i(g_uv_mapping_type_uniform, 3);
+    DrawVirtualObject("outdoor_post1");
+    DrawVirtualObject("outdoor_post2");
+    glUniform1i(g_uv_mapping_type_uniform, 0);
+    DrawVirtualObject("outdoor_back");
+
+    // outros outdoors
+    model = Matrix_Translate(30.0f, 0.7f, -100.0f) * Matrix_Scale(0.7f, 0.7f, 0.7f);
+    glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+    glUniform1i(g_object_id_uniform, OUTDOOR_FACE);
+    glUniform1i(g_uv_mapping_type_uniform, 0);
+    DrawVirtualObject("outdoor_face");
+    glUniform1i(g_object_id_uniform, OUTDOOR_POST);
+    glUniform1i(g_uv_mapping_type_uniform, 3);
+    DrawVirtualObject("outdoor_post1");
+    DrawVirtualObject("outdoor_post2");
+    glUniform1i(g_uv_mapping_type_uniform, 0);
+    DrawVirtualObject("outdoor_back");
+
+    model = Matrix_Translate(22.0f, 0.7f, -44.0f) * Matrix_Scale(0.7f, 0.7f, 0.7f) * Matrix_Rotate_Y(PI/2);
+    glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+    glUniform1i(g_object_id_uniform, OUTDOOR_FACE);
+    glUniform1i(g_uv_mapping_type_uniform, 0);
+    DrawVirtualObject("outdoor_face");
+    glUniform1i(g_object_id_uniform, OUTDOOR_POST);
+    glUniform1i(g_uv_mapping_type_uniform, 3);
+    DrawVirtualObject("outdoor_post1");
+    DrawVirtualObject("outdoor_post2");
+    glUniform1i(g_uv_mapping_type_uniform, 0);
+    DrawVirtualObject("outdoor_back");
+
+    model = Matrix_Translate(-0.0f, 0.7f, 55.0f) * Matrix_Scale(0.7f, 0.7f, 0.7f) * Matrix_Rotate_Y(3*PI/4);
+    glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+    glUniform1i(g_object_id_uniform, OUTDOOR_FACE);
+    glUniform1i(g_uv_mapping_type_uniform, 0);
+    DrawVirtualObject("outdoor_face");
+    glUniform1i(g_object_id_uniform, OUTDOOR_POST);
+    glUniform1i(g_uv_mapping_type_uniform, 3);
+    DrawVirtualObject("outdoor_post1");
+    DrawVirtualObject("outdoor_post2");
+    glUniform1i(g_uv_mapping_type_uniform, 0);
+    DrawVirtualObject("outdoor_back");
+}
+
+void DrawBonus()
+{
+    glm::mat4 model = Matrix_Identity();
+
+    std::vector<glm::vec3> bonus_positions = {
+        glm::vec3(16.0f, -0.9f, -89.0f), // curva 1
+        glm::vec3(90.0f, -0.9f, -74.0f), // curva 2
+        glm::vec3(27.0f, -0.9f, -44.0f), // curva 3
+        glm::vec3(63.0f, -0.9f, -4.0f), // curva 4
+        glm::vec3(10.0f, -0.9f, 53.0f), // curva 5
+        // glm::vec3(0.0f, -0.9f, -2.0f) // posicao padrao
+    };
+
+    for (const auto& pos : bonus_positions) {
+        model = Matrix_Translate(pos.x, pos.y, pos.z)
+                * Matrix_Scale(0.6f, 0.6f, 0.6f);
+        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, BONUS);
+        glUniform1i(g_uv_mapping_type_uniform, 0);
+        DrawVirtualObject("the_bonus");
+    }
+}
+
+void DrawTrees()
+{
+    glm::mat4 model = Matrix_Identity();
+
+    std::vector<glm::vec3> tree_positions = {
+        glm::vec3(6.0f,-1.0f,-8.0f), 
+        glm::vec3(-6.0f,-1.0f,-8.0f),
+        glm::vec3(78.0f, -1.0f, -74.0f),
+        glm::vec3(96.0f, -1.0f, -74.0f),
+        glm::vec3(17.0f, -1.0f, -70.0f),
+        glm::vec3(41.0f, -1.0f, -42.0f),
+        glm::vec3(47.0f, -1.0f, -4.0f),
+        glm::vec3(39.0f, -1.0f, 31.0f),
+        glm::vec3(10.0f, -1.0f, 35.0f),
+    };
+    for (const auto& pos : tree_positions) {
+        model = Matrix_Translate(pos.x, pos.y, pos.z);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, TREE_BODY);
+        glUniform1i(g_uv_mapping_type_uniform, 5);
+        DrawVirtualObject("tree_body");
+        glUniform1i(g_object_id_uniform, TREE_LEAVES);
+        glUniform1i(g_uv_mapping_type_uniform, 5);
+        DrawVirtualObject("tree_leaves");
+    }
+}
+
+void DrawWheelsWithTransform(const char* object_name, glm::mat4 transform)
 {
     glm::vec3 bbox_min = g_VirtualScene[object_name].bbox_min;
     glm::vec3 bbox_max = g_VirtualScene[object_name].bbox_max;
@@ -2322,4 +2223,14 @@ void UpdateWheelsTransforms(Car &car, float deltaTime)
                             -car.rearLeftWheelPosition.y,
                             -car.rearLeftWheelPosition.z);
     
+}
+
+void UpdatePonctuation(Car &car, float deltaTime)
+{
+    // Atualiza a pontuação do carro baseada na velocidade e só aumenta quando o carro fizer curvas
+    float abs_wheel_angle = glm::abs(car.front_wheel_angle);
+    if (abs_wheel_angle > 0.3f)
+    {
+        car.pontuation += (car.speed * 30 + abs_wheel_angle * 300) * deltaTime;
+    }
 }

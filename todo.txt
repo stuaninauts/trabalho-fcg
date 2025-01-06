@@ -19,10 +19,3 @@ pretto:
         carro com objeto bonus (cubo x esfera)
 
     ajustar a camera pra ficar gostosinha
-
-comentarios pra colocar no relatorio dps
-noq o chatgpt foi usado
-    movimentacao do carro (inutil so atrapalhou)
-    construcao do skybox (inutil so atrapalhou)
-    algumas ideias (por exemplo construir shaders diferentes para skybox) (inutil acabei fazendo de outro jeito totalmente diferente depois)
-    construcao script para transformar svg em um objeto no blender (esse ele ajudou msm)

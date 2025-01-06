@@ -142,7 +142,7 @@ void TextRendering_Init()
     glCheckError();
 }
 
-float textscale = 1.5f;
+float textscale = 2.0f;
 
 void TextRendering_PrintString(GLFWwindow* window, const std::string &str, float x, float y, float scale = 1.0f)
 {

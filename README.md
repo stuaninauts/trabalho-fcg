@@ -1,128 +1,87 @@
 # Trabalho Final de Fundamentos de Computação Gráfica
 
-## Especificação
-    O trabalho deve ser desenvolvido em duplas.
-        Parte da entrega do trabalho final de FCG será através do Git (hosting no Github). Assim, o professor poderá colaborar através de revisão de código (dado um commit específico), pull requests, etc., caso a dupla precise de alguma ajuda durante o desenvolvimento do trabalho.
-        Até o dia 8 de novembro de 2024, preencha o formulário do link abaixo informando os integrantes de sua dupla e uma breve descrição de qual será a aplicação gráfica desenvolvida, além de outras informações sobre a entrega do trabalho final. O formulário deve ser preenchido por somente um dos integrantes da dupla.
-        Link para o formulário que deve ser preenchido: https://forms.gle/TxzTpF5F4MVsvnUg8
-        Duplas que não seguirem à risca a instrução acima poderão sofrer desconto de nota.
+## Contribuição de cada membro e descrição do processo desenvolvimento
 
-    Você pode utilizar a linguagem de programação de sua escolha.
-        Recomenda-se, entretanto, o uso da linguagem C++ com OpenGL. Isto possibilitará a reutilização de código desenvolvido em nossas aulas práticas (laboratórios). Também, facilitará na criação de uma aplicação de alta performance, com interação em tempo real.
-        Você poderá utilizar no máximo 15% de código pronto para este trabalho (sem considerar o código que desenvolvemos nas aulas práticas).
-            Todo código pronto utilizado deve estar devidamente identificado através de comentários no código fonte entregue, listando a FONTE de onde foi retirado cada trecho de código. O comentário do código deve obrigatoriamente conter a palavra "FONTE" em maiúsculo, para fácil localização pelo professor.
-        Qualquer utilização de código além desse limite será considerada plágio e o trabalho correspondente receberá nota zero.
-        Qualquer cópia de código de trabalhos de colegas deste ou de semestres anteriores será considerado plágio e o trabalho correspondente receberá nota zero.
 
-- [X]    A sua aplicação deve possibilitar interação em tempo real.	      
-		Por exemplo, se você desenvolver um jogo, ele não pode ser "lento" a ponto de impactar negativamente a jogabilidade.
-
-- [X]    A sua aplicação deve possuir algum objetivo e lógica de controle não-trivial.
-		Por exemplo, um jogo de computador possui uma lógica não-trivial. Mas, uma aplicação que simplesmente carrega um modelo geométrico 3D e permite sua visualização é trivial.
-
-- [X]    A sua aplicação deve utilizar as matrizes que vimos em aula para transformações geométricas (Model matrix), projeções (Projection matrix), e especificação do sistema de coordenadas da câmera (View matrix).
-	        Você não pode utilizar bibliotecas existentes para o cálculo de câmera, transformações, etc. Por exemplo, as funções a seguir, comumente utilizadas em tutoriais disponíveis na Web, não podem ser utilizadas:
-	            gluLookAt(), gluOrtho2D(), gluPerspective(), gluPickMatrix(), gluProject(), gluUnProject(), glm::lookAt(), glm::ortho(), glm::perspective(), glm::pickMatrix(), glm::rotate(), glm::scale(), glm::translate(), dentre outras.
-	        Você pode reutilizar o código desenvolvido em nossas aulas práticas.
-
-- [X]    A sua aplicação deve possibilitar interação com o usuário através do mouse e do teclado.
-
-- [ ]    A qualidade da apresentação do trabalho final, além da presença da dupla nos dias de apresentações de outros colegas, irá contar para a nota final do trabalho. Cada integrante da dupla irá receber pontuação independente de participação. Qualquer tipo de plágio acarretará nota zero.
-
-A sua aplicação deve incluir implementação dos seguintes conceitos de Computação Gráfica:
-
-- [ ]    Objetos virtuais representados através de malhas poligonais complexas (malhas de triângulos).
-- No mínimo sua aplicação deve incluir um modelo geométrico da complexidade igual ou maior que o modelo "cow.obj" disponível neste link.
-- Para carregar este (e outros) modelos geométricos no formato OBJ, você pode utilizar bibliotecas existentes (por exemplo: tinyobjloader (C++) e tinyobjloader (C)).
-- Quanto maior a variedade de modelos geométricos, melhor. Veja a seção "Modelos 3D e Texturas Disponíveis na Web" na página principal de nosso Moodle para uma lista de locais onde você pode obter modelos 3D.
-	- [ ] Obj carro principal
-	- [ ] Obj objeto bonus
+- - [X] Objetos virtuais representados através de malhas poligonais complexas (malhas de triângulos).
+	- Os modelos com complexidade igual ou maior que "cow.obj": objeto bônus (`"bonus-compressed.obj"`), carro (`"supratunadov5.obj"`) e árvore (`"tree.obj"`)
+	- O modelo original do carro foi obtido neste [link](https://www.cgtrader.com/free-3d-models/car/racing-car/toyota-supra-mk4-c154dbfb-31b0-403f-affb-b30e1c5b34f1) porém foram feitas modificações utilizando o software Blender: rebaixamento do carro, cambagem das rodas, separação de componentes, aumento do escapamento e substituição das logos do carro por essa desse [link](https://www.cgtrader.com/items/2072818/download-page)
+	- Integrante responsável: Eduardo
 		
-- [X]    Transformações geométricas de objetos virtuais.
-- Através da interação com o teclado e/ou mouse, o usuário deve poder controlar transformações geométricas aplicadas aos objetos virtuais (não somente controle da câmera).
-	- [X] Usar as teclas W, A, S, D para movimentar o carro nas respectivas direções
-		- [ ] Definir velocidade ideal, etc ...
-		- [ ] Corrigir movimentacao para os lados com vetor de direcao
-	- [ ] Usar a tecla Space para puxar o freio de mão (implementação em conjunto com curvas de bézier, definir algo visual para usuário ver enquanto está no drift)  		
+- [X] Transformações geométricas de objetos virtuais.
+	- As teclas "W" e "S" possibilitam a movimentação dianteira e traseira do carro com translações no carro de acordo com a sua direção. Essas teclas também culminam na rotação das 4 rodas de acordo com a velocidade do carro
+	- As teclas "A" e "D" realizam transformações nas rodas dianteiras que posteriormente vão ditar a direção do carro de acordo com a sua rotação. 
+	- Integrante responsável: Eduardo
 
-- [X]    Controle de câmeras virtuais.
-- No mínimo sua aplicação deve implementar uma câmera look-at e uma câmera livre, conforme praticamos no Laboratório 2.
-	- [X] Implementar camera look-at 3a pessoa atrás do carro
-	- [X] Implementar camera livre que permite "viajar" pelo cenario
+- [X] Controle de câmeras virtuais.
+    - A tecla "L" permite a alternância para a câmera look-at (visão em terceira pessoa, focada no carro, alternando sua rotação baseada na rotação do carro com a possibilidade de alterar o "zoom" com a tecla "SCROLL") e a câmera livre (teclas "UP", "DOWN", "LEFT", "RIGHT" permitem a movimentação desta câmera)
+    - Integrante responsável: Gustavo
 
-- [X]    No mínimo um objeto virtual deve ser copiado com duas ou mais instâncias, isto é, utilizando duas ou mais Model matrix aplicadas ao mesmo conjunto de vértices.
-- Como exemplo, veja o código do Laboratório 2 e Laboratório 3, onde o mesmo modelo geométrico (cubo) é utilizado para desenhar todas as partes do boneco, e somente as matrizes de modelagem (Model matrix) são alteradas para desenhar cada cópia do cubo.
-	- [X] Colocar bônus de velocidade nas extremidades da curva
+- [X] No mínimo um objeto virtual deve ser copiado com duas ou mais instâncias, isto é, utilizando duas ou mais 
+    - Os seguintes objetos possuem duas ou mais instâncias: outdoor (`"outdoor.obj"`), bônus (`"bonus-compressed.obj"`) e árvore (`"tree.obj"`)
+    - Integrantes responsáveis:  Eduardo e Gustavo
 
-- [ ]    Testes de intersecção entre objetos virtuais.
-- No mínimo sua aplicação deve utilizar três tipos de teste de intersecção (por exemplo, um teste cubo-cubo, um teste cubo-plano, e um teste ponto-esfera).
-- Estes testes devem ter algum propósito dentro da lógica de sua aplicação.
-- Por exemplo, em um jogo de corrida, o modelo virtual de um carro não pode atravessar a parede, e para tanto é necessário testar a intersecção entre estes dois objetos de modo a evitar esta intersecção.
-- Os testes de colisão devem ser implementados em um arquivo à parte, nomeado "collisions.cpp".
-	- [ ] Intersecção do carro com o terreno e com "parede" de chegada (cubo-plano)
-			- [ ] Se está no drift e sai da pista deixa de pontuar
-	- [ ] Intersecção do carro com o objeto bônus (cubo-esfera)
-		- [ ] Se está no drift e colide com objeto bônus ganha multiplicador de pontuação
-	- [ ] Intersecção do carro com árvore (cubo-cubo)
-		- [ ] Se carro colide com árvore pontuação zera/desconta
+- [X] Testes de intersecção entre objetos virtuais.
+    - TODO
+    No mínimo sua aplicação deve utilizar três tipos de teste de intersecção (por exemplo, um teste cubo-cubo, um teste cubo-plano, e um teste ponto-esfera).
+    Estes testes devem ter algum propósito dentro da lógica de sua aplicação.
+    Por exemplo, em um jogo de corrida, o modelo virtual de um carro não pode atravessar a parede, e para tanto é necessário testar a intersecção entre estes dois objetos de modo a evitar esta intersecção.
+    Os testes de colisão devem ser implementados em um arquivo à parte, nomeado "collisions.cpp".
+    - Integrante responsável: Gustavo
 
-- [ ]    Modelos de iluminação de objetos geométricos.
-- No mínimo sua aplicação deve incluir objetos com os seguintes modelos de iluminação: difusa (Lambert) e Blinn-Phong.
-- No mínimo sua aplicação deve incluir objetos com os seguintes modelos de interpolação para iluminação:
-	- No mínimo um objeto com modelo de Gouraud: o modelo de iluminação é avaliado para cada vértice usando suas normais, gerando uma cor, a qual é interpolada para cada pixel durante a rasterização.
-	- No mínimo um objeto com modelo de Phong: as normais de cada vértice são interpoladas para cada pixel durante a rasterização, e o modelo de iluminação é avaliado para cada pixel, utilizando estas normais interpoladas.
-	- [ ] Definir quais objetos terão cada iluminação: **(difusa (Lambert) | Blinn-Phong | Gouraud | Phong)**
-		- [ ] Skybox (difusa (lambert))
-		- [ ] Carro ()
-		- [ ] Objeto Bônus ()
-		- [ ] Demais objetos
+- [X] Modelos de iluminação de objetos geométricos.
+    - Modelos de iluminação: a árvore (`"tree.obj"`) e o outdoor (`"outdoor.obj"`) possuem iluminação difusa e os demais objetos seguem o modelo de Blinn-Phong
+    - Modelos de interpolação para iluminação: o objeto bônus (`"bonus-compressed.obj"`) utiliza o modelo de Gouraud e os demais objetos seguem o modelo de Phong
+    - Integrantes responsáveis: Eduardo e Gustavo
 
-- [ ]    Mapeamento de texturas.
-- TODOS objetos virtuais de sua aplicação devem ter suas cores definidas através de texturas representadas por imagens (no mínimo três imagens distintas).
-- Imagens de texturas "esticadas" de maneira não natural receberão desconto de pontuação.
-	- [ ] Textura da pista
-		- [ ] Textura do terreno
-		- [ ] Textura do objeto bônus
+- [X] Mapeamento de texturas
+    - Todos objetos foram mapeados com texturas personalizadas (baixadas da internet) independentes dos arquivos obj 
+    - Integrante responsável: Eduardo
 
-- [ ]    Curvas de Bézier.
-- No mínimo um objeto virtual de sua aplicação deve ter sua movimentação definida através de uma curva de Bézier cúbica. O objeto deve se movimentar de forma suave ao longo do espaço em um caminho curvo (não reto).
-	- [ ] Modelar a pista
-			- [ ] Definir movimentação do drift
-- [ ]    Animação de Movimento baseada no tempo.
-- Todas as movimentações de objetos (incluindo da câmera) devem ser computadas baseado no tempo (isto é, movimentações devem ocorrer sempre na mesma velocidade independente da velocidade da CPU onde o programa está sendo executado).
-	- [ ] Não preciso dizer
+- [X] Curvas de Bézier.
+    - TODO
+    No mínimo um objeto virtual de sua aplicação deve ter sua movimentação definida através de uma curva de Bézier cúbica. O objeto deve se movimentar de forma suave ao longo do espaço em um caminho curvo (não reto).
+    - Integrante responsável: Gustavo
 
-OPCIONAIS (ordem de implementação):
-- [ ] Rodas tremulas fora da pista
-- [ ] Drift deixar marcas de pneu, fumaça ... / sistema de particulas
-- [ ] Fogo no escapamento
-- [ ] Som do carro de acordo com a aceleração
+- [X] Animação de Movimento baseada no tempo.
+    - A movimentação do carro (incluindo a rotação das rodas) e a do objeto bônus são baseadas no tempo
+    - Integrantes responsáveis: Eduardo e Gustavo
 
-|-----------------------------------------------------+-----------|
-| Critérios Técnicos                                  | Pontuação |
-|-----------------------------------------------------+-----------|
-| Malhas poligonais complexas                         |           |
-| Transformações geométricas controladas pelo usuário |           |
-| Câmera livre e câmera look-at                       |           |
-| Instâncias de objetos                               |           |
-| Três tipos de testes de intersecção                 |           |
-| Modelos de Iluminação Difusa e Blinn-Phong          |           |
-| Modelos de Interpolação de Phong e Gouraud          |           |
-| Mapeamento de texturas em todos os objetos          |           |
-| Movimentação com curva Bézier cúbica                |           |
-| Animações baseadas no tempo ($\Delta t$)            |           |
-|-----------------------------------------------------+-----------|
+## Utilização do ChatGPT
+Durante o desenvolvimento do trabalho, utilizamos o ChatGPT como ferramenta de auxílio em algumas tarefas, como brainstorming de ideias, suporte na sintaxe da linguagem C++ e resolução de pequenos bugs.
+
+No que diz respeito à implementação do código, tentamos utilizá-lo para nos ajudar a implementar a movimentação do carro. Contudo, ele falhou em todas as tentativas, retornando trechos de código não funcionais e sem sentido. Após conseguirmos implementar a movimentação básica do carro, o ChatGPT foi útil para nos ajudar a compreender a lógica necessária para adicionar uma mecânica de "drift", deixando o carro deslizar mais. Também buscamos sua ajuda para criar o "skybox" do jogo, mas, mais uma vez, as sugestões foram inadequadas, o que nos levou a implementar essa funcionalidade integralmente por conta própria.
+
+Por outro lado, ele foi bastante eficaz ao nos orientar no uso do Blender, um software que nenhum de nós havia utilizado antes. Ele nos ajudou a manusear o programa e a desenvolver scripts para criar objetos dentro do Blender. Por exemplo, o objeto `"outdoor.obj"` foi criado inteiramente com um script gerado com sua assistência, enquanto o `"track.obj"` foi desenvolvido por meio de um script que convertia um arquivo SVG em um objeto no Blender.
+
+## Imagens do jogo 
 
 
-|----------------------------------------------------------------------------+-----------|
-| Critérios de Participação                                                  | Pontuação |
-|----------------------------------------------------------------------------+-----------|
-| Entrega de acordo com a especificação (Código, Binário, Relatório, Vídeo)  |           |
-| Qualidade do Relatório                                                     |           |
-| Qualidade da apresentação final                                            |           |
-| Apresentação parcial no Lab 6 e 7 (nota individual)                        |           |
-| Participação na apresentação final (nota individual)                       |           |
-| Participação no desenvolvimento do código                                  |           |
-|   de acordo com o histórico do github (nota individual)                    |           |
-|----------------------------------------------------------------------------+-----------|
+## Manual de uso
+O objetivo do jogo é gerar a maior pontuação possível. Para isso é necessário se manter na pista e não colidir com objetos fora dela. Quanto maior a velocidade mais pontos são gerados.
+Os objetos localizados nas curvas são objetos bônus multiplicadores de pontuação, ou seja, quando o carro passa por cima deles o multiplicador de pontuação aumenta, resultado em mais pontos.
+
+**Controles de Movimentação**
+- **W**: Move o carro para frente.
+- **S**: Move o carro para trás.
+- **A**: Move o carro para a esquerda.
+- **D**: Move o carro para a direita.
+
+**Controles de Câmera**
+- **L**: Alterna entre os modos de câmera:
+  - **Câmera em terceira pessoa**: Focada no carro.
+  - **Câmera livre**: Permite movimentação independente da câmera utilizando as **setas do teclado**.
+
+**Outras Funções**
+- **Espaço (Space)**: Reinicia o jogo desde o início.
+
+## Compilação e execução
+
+Para rodar o código basta clonar este repositório e executar os seguintes comandos
+sh```
+cd trabalho-fcg
+make
+make run
+```
+
 	
