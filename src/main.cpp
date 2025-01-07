@@ -177,6 +177,8 @@ struct Car
     int pontuation;
     float pontuation_multiplier;
 
+    bool bonus_collected[5] = {false, false, false, false, false};
+
     // Construtor
     Car() 
         : carPosition(0.0f, -0.95f, 0.0f),
@@ -2009,17 +2011,18 @@ void DrawBonus()
         glm::vec3(10.0f, -0.9f, 53.0f), // curva 5
         // glm::vec3(0.0f, -0.9f, -2.0f) // posicao padrao
     };
-
-    for (const auto& pos : bonus_positions) {
-        model = Matrix_Translate(pos.x, pos.y, pos.z)
-                * Matrix_Scale(0.6f, 0.6f, 0.6f);
-        glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
-        glUniform1i(g_object_id_uniform, BONUS);
-        glUniform1i(g_uv_mapping_type_uniform, 0);
-        DrawVirtualObject("the_bonus");
-        
-        if (g_Show_BBOX)
-            DrawBoundingBox("the_bonus");
+    for (size_t i = 0; i < bonus_positions.size(); ++i) {
+        if (!car.bonus_collected[i]) {
+            model = Matrix_Translate(bonus_positions[i].x, bonus_positions[i].y, bonus_positions[i].z)
+                    * Matrix_Scale(0.6f, 0.6f, 0.6f);
+            glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
+            glUniform1i(g_object_id_uniform, BONUS);
+            glUniform1i(g_uv_mapping_type_uniform, 0);
+            DrawVirtualObject("the_bonus");
+            
+            if (g_Show_BBOX)
+                DrawBoundingBox("the_bonus");
+        }
     }
 }
 
@@ -2167,11 +2170,13 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
         car.carVelocity = glm::vec3(0.0f); 
         resetCar();
     }
-
-    if(cube_sphere_intersect_bonus(bbox_min, bbox_max)){
-        car.pontuation_multiplier += 0.1;
-        //POP na renderização do bonus
+    for(int i=0; i<5; i++){
+        if(cube_sphere_intersect_bonus(bbox_min, bbox_max, i) && !car.bonus_collected[i]){   
+            car.pontuation_multiplier += 0.1;
+            car.bonus_collected[i] = true;
+        }
     }
+    
 
     // Atualiza valores escalares
     car.speed = glm::length(car.carVelocity);
@@ -2340,4 +2345,5 @@ void resetCar(){
     car.front_wheel_angle = 0.0f;
     car.pontuation = 0;
     car.pontuation_multiplier = 1;
+    std::fill(std::begin(car.bonus_collected), std::end(car.bonus_collected), false);
 }

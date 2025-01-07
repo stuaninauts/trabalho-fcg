@@ -121,12 +121,10 @@ bool cube_sphere_intersect(glm::vec3 min, glm::vec3 max, glm::vec3 center, float
     return (distance <= radius);
 }
 
-bool cube_sphere_intersect_bonus(glm::vec3 min, glm::vec3 max){
-    for (const auto& pos : bonus_positions) {
-        if(cube_sphere_intersect(min, max, pos, bonus_radius)){
+bool cube_sphere_intersect_bonus(glm::vec3 min, glm::vec3 max, int i){
+        if(cube_sphere_intersect(min, max, bonus_positions[i], bonus_radius)) {
             return true;
         }
-    }
     return false;
 }
 

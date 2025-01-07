@@ -14,6 +14,6 @@ bool cube_cilinder_intersect_tree(glm::vec3 min, glm::vec3 max);
 
 bool cube_cilinder_intersect_outdoor(glm::vec3 min, glm::vec3 max);
 
-bool cube_sphere_intersect_bonus(glm::vec3 min, glm::vec3 max);
+bool cube_sphere_intersect_bonus(glm::vec3 min, glm::vec3 max, int bonus);
 
 #endif

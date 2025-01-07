@@ -4,10 +4,8 @@ stuani:
         codigo shader fragment
 
 pretto:
-    fazer movimentacao dos objetos bonus com curva de bezier (vao ficar girando um pquitito com essa curva)
-
     implementar colisoes
         carro com linha de chegada (cubo x plano)
         carro com pista (cubo x sla oq (deve ser plano, essa vai ser foda) (talvez tu pode tentar com a grama que nao vai ta em contato direto))
 
-    ajustar a camera pra ficar gostosinha
+    bezier na camera pra ficar gostosinha
