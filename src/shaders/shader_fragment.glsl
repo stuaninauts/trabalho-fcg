@@ -38,6 +38,7 @@ uniform mat4 projection;
 #define BONUS 12
 #define OUTDOOR_FACE 13
 #define OUTDOOR_POST 14
+#define FINISH_LINE 15
 
 
 uniform int object_id;
@@ -62,6 +63,7 @@ uniform sampler2D TextureTrack;
 uniform sampler2D TextureTree;
 uniform sampler2D TextureBonus;
 uniform sampler2D TextureOutdoorFace;
+uniform sampler2D TextureFinishLine;
 
 
 // O valor de saída ("out") de um Fragment Shader é a cor final do fragmento.
@@ -308,6 +310,13 @@ void main()
     else if (object_id == OUTDOOR_POST) 
     {
         Kd = texture(TextureCarMetalic, vec2(U,V)).rgb;
+        Ks = vec3(0.8, 0.8, 0.8); // High specular reflectance for metallic look
+        Ka = vec3(0.1, 0.1, 0.1); // Ambient reflectance
+        q = 64.0; // Specular exponent for shiny surface
+    }
+    else if (object_id == FINISH_LINE) 
+    {
+        Kd = texture(TextureFinishLine, vec2(U,V)).rgb;
         Ks = vec3(0.8, 0.8, 0.8); // High specular reflectance for metallic look
         Ka = vec3(0.1, 0.1, 0.1); // Ambient reflectance
         q = 64.0; // Specular exponent for shiny surface

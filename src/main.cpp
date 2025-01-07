@@ -65,6 +65,7 @@
 #define BONUS 12
 #define OUTDOOR_FACE 13
 #define OUTDOOR_POST 14
+#define FINISH_LINE 15
 
 #define PI 3.141592f
 
@@ -461,6 +462,7 @@ int main(int argc, char* argv[])
     LoadTextureImage("../../data/tree/Bark012_1K-JPG_Color.jpg"); // TextureTree
     LoadTextureImage("../../data/bonus/Metal048A_1K-JPG_Color.jpg"); // TextureBonus
     LoadTextureImage("../../data/outdoor/jdm-japan-flag.png"); // TextureOutdoorFace
+    LoadTextureImage("../../data/line/white-texture.jpg"); // TextureFinishLine
 
 
     // Construímos a representação de objetos geométricos através de malhas de triângulos
@@ -491,6 +493,10 @@ int main(int argc, char* argv[])
     ObjModel outdoormodel("../../data/outdoor/outdoor.obj");
     ComputeNormals(&outdoormodel);
     BuildTrianglesAndAddToVirtualScene(&outdoormodel);
+
+    ObjModel finishlinemodel("../../data/line/finish-line.obj");
+    ComputeNormals(&finishlinemodel);
+    BuildTrianglesAndAddToVirtualScene(&finishlinemodel);
 
     if ( argc > 1 )
     {
@@ -615,6 +621,12 @@ int main(int argc, char* argv[])
         glUniform1i(g_object_id_uniform, PLANE);
         glUniform1i(g_uv_mapping_type_uniform, 1);
         DrawVirtualObject("the_plane");
+
+        model = Matrix_Translate(0.0f, -0.95f, 0.0f);
+        glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
+        glUniform1i(g_object_id_uniform, FINISH_LINE);
+        glUniform1i(g_uv_mapping_type_uniform, 1);
+        DrawVirtualObject("finish_line");
 
         TextRendering_ShowVelocity(window);
         TextRendering_ShowPontuation(window);
@@ -832,6 +844,7 @@ void LoadShadersFromFiles()
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureTree"), 9);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureBonus"), 10);
     glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureOutdoorFace"), 11);
+    glUniform1i(glGetUniformLocation(g_GpuProgramID, "TextureFinishLine"), 12);
 
 }
 
