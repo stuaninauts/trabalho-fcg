@@ -5,17 +5,9 @@ stuani:
 
 pretto:
     fazer movimentacao dos objetos bonus com curva de bezier (vao ficar girando um pquitito com essa curva)
-    
-    arrumar o codigo da funcao DrawBoundingBox que ta dando segmentation fault
-        no meu outro pc tava funcionando mas parou de funcionar 
-        ver codigo com a variavel g_Show_BBOX que ativa bbox (apertar B no teclado)
-        obs: essa funcao desenha as bbox dos objetos, é util pra debugar depois as colisoes
 
     implementar colisoes
-        carro com arvore -> tree_body (cubo x cilindro)
-        carro com outdoor -> outdoor_post1/2 (cubo x cilindro)
         carro com linha de chegada (cubo x plano)
         carro com pista (cubo x sla oq (deve ser plano, essa vai ser foda) (talvez tu pode tentar com a grama que nao vai ta em contato direto))
-        carro com objeto bonus (cubo x esfera)
 
     ajustar a camera pra ficar gostosinha

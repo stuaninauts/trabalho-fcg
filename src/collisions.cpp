@@ -4,6 +4,10 @@
 #include <algorithm>
 #include <cstdio>
 
+float tree_radius = 0.27f;       
+float outdoor_radius = 0.5f;
+float bonus_radius = 0.1f; 
+
 std::vector<glm::vec3> tree_positions = {
     glm::vec3(6.0f,-1.0f,-8.0f), 
     glm::vec3(-6.0f,-1.0f,-8.0f),
@@ -38,12 +42,8 @@ std::vector<glm::vec3> bonus_positions = {
 
 
 /*    
-    implementar colisoes
-        carro com arvore -> tree_body (cubo x cilindro)
-        carro com outdoor -> outdoor_post1/2 (cubo x cilindro)
         carro com linha de chegada (cubo x plano)
         carro com pista (cubo x sla oq (deve ser plano, essa vai ser foda) (talvez tu pode tentar com a grama que nao vai ta em contato direto))
-        carro com objeto bonus (cubo x esfera) 
 */
 
 bool cube_cilinder_intersect(glm::vec3 min, glm::vec3 max, glm::vec3 center, float radius){
@@ -63,9 +63,9 @@ bool cube_cilinder_intersect(glm::vec3 min, glm::vec3 max, glm::vec3 center, flo
 }
 
 // carro com arvore -> tree_body (cubo x cilindro)
-bool cube_cilinder_intersect_tree(glm::vec3 min, glm::vec3 max, float radius){
+bool cube_cilinder_intersect_tree(glm::vec3 min, glm::vec3 max){
     for (const auto& pos : tree_positions) {
-        if(cube_cilinder_intersect(min, max, pos, radius)){
+        if(cube_cilinder_intersect(min, max, pos, tree_radius)){
             return true;
         }
     }
@@ -73,9 +73,9 @@ bool cube_cilinder_intersect_tree(glm::vec3 min, glm::vec3 max, float radius){
 }
 
 // carro com outdoor -> outdoor_post1/2 (cubo x cilindro)
-bool cube_cilinder_intersect_outdoor(glm::vec3 min, glm::vec3 max, float radius){
+bool cube_cilinder_intersect_outdoor(glm::vec3 min, glm::vec3 max){
     for (const auto& pos : outdoor_positions) {
-        if(cube_cilinder_intersect(min, max, pos, radius)){
+        if(cube_cilinder_intersect(min, max, pos, outdoor_radius)){
             return true;
         }
     }
@@ -119,6 +119,15 @@ bool cube_sphere_intersect(glm::vec3 min, glm::vec3 max, glm::vec3 center, float
     float distance = glm::distance(closest_point, center);
 
     return (distance <= radius);
+}
+
+bool cube_sphere_intersect_bonus(glm::vec3 min, glm::vec3 max){
+    for (const auto& pos : bonus_positions) {
+        if(cube_sphere_intersect(min, max, pos, bonus_radius)){
+            return true;
+        }
+    }
+    return false;
 }
 
 

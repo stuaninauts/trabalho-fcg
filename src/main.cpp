@@ -74,6 +74,15 @@
 #define MIN_DISTANCE_LOOK_AT_Y 0.8f
 #define MAX_DISTANCE_LOOK_AT_Y 3.0f
 
+// List of selected object names
+const std::vector<std::string> selected_objects = {
+    "body",
+    "front_bumper",
+    "Bottom_panel",
+    "side_skirts",
+    "Bottom_panel.001",
+};
+
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
 
@@ -155,7 +164,6 @@ struct Car
     float max_front_wheel_angle; // Ângulo máximo de rotação das rodas dianteiras
     float negative_camber_angle; // Ângulo de cambagem das rodas
 
-    
     glm::vec3 frontLeftWheelPosition; // Posição da roda dianteira esquerda
     glm::vec3 frontRightWheelPosition; // Posição da roda dianteira direita
     glm::vec3 rearLeftWheelPosition; // Posição da roda traseira esquerda
@@ -218,7 +226,7 @@ GLuint CreateGpuProgram(GLuint vertex_shader_id, GLuint fragment_shader_id); // 
 void PrintObjModelInfo(ObjModel*); // Função para debugging
 
 void DrawVirtualObject(const char* object_name); // Desenha um objeto armazenado em g_VirtualScene
-void DrawBoundingBox(const glm::vec3& bbox_min, const glm::vec3& bbox_max);
+void DrawBoundingBox(const std::string& object_name);
 
 // Declaração de funções auxiliares para renderizar texto dentro da janela
 // OpenGL. Estas funções estão definidas no arquivo "textrendering.cpp".
@@ -252,6 +260,9 @@ void DrawOutdoors();
 void DrawBonus();
 void DrawTrees();
 void DrawWheelsWithTransform(const char* object_name, glm::mat4 transform);
+
+std::pair<glm::vec3, glm::vec3> ComputeCarAABB(const Car& car);
+void resetCar();
 
 // Atualizacoes no carro
 void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed, bool key_A_pressed, bool key_D_pressed, float deltaTime);
@@ -684,7 +695,7 @@ void DrawVirtualObject(const char* object_name)
     glUniform4f(g_bbox_max_uniform, bbox_max.x, bbox_max.y, bbox_max.z, 1.0f);
 
     if (g_Show_BBOX == true) 
-        DrawBoundingBox(bbox_min, bbox_max);
+        DrawBoundingBox(object_name);
 
     // Pedimos para a GPU rasterizar os vértices dos eixos XYZ
     // apontados pelo VAO como linhas. Veja a definição de
@@ -703,8 +714,12 @@ void DrawVirtualObject(const char* object_name)
     glBindVertexArray(0);
 }
 
-void DrawBoundingBox(const glm::vec3& bbox_min, const glm::vec3& bbox_max)
+void DrawBoundingBox(const std::string& object_name)
 {
+
+    glm::vec3 bbox_min = g_VirtualScene[object_name].bbox_min;
+    glm::vec3 bbox_max = g_VirtualScene[object_name].bbox_max;
+
     GLfloat vertices[] = {
         bbox_min.x, bbox_min.y, bbox_min.z, // 0
         bbox_max.x, bbox_min.y, bbox_min.z, // 1
@@ -751,6 +766,7 @@ void DrawBoundingBox(const glm::vec3& bbox_min, const glm::vec3& bbox_max)
     glDeleteBuffers(1, &vbo);
     glDeleteBuffers(1, &ebo);
 }
+
 
 // Função que carrega os shaders de vértices e de fragmentos que serão
 // utilizados para renderização. Veja slides 180-200 do documento Aula_03_Rendering_Pipeline_Grafico.pdf.
@@ -1904,7 +1920,6 @@ void DrawCar()
         glUniform1i(g_object_id_uniform, obj.object_id);
         glUniform1i(g_uv_mapping_type_uniform, obj.uv_mapping_type);
 
-        // se o nome do objeot é wheel_front_left
         if (obj.object_name == "wheel_front_left") {
             glm::mat4 frontLeftWheelModel = model * car.frontLeftWheelTransform;
             DrawWheelsWithTransform(obj.object_name.c_str(), frontLeftWheelModel);
@@ -1924,9 +1939,10 @@ void DrawCar()
         else
             DrawVirtualObject(obj.object_name.c_str());
 
+        if (g_Show_BBOX)
+            DrawBoundingBox(obj.object_name.c_str());
     }
 }
-
 void DrawOutdoors() 
 {
     // outdoor main
@@ -2001,6 +2017,9 @@ void DrawBonus()
         glUniform1i(g_object_id_uniform, BONUS);
         glUniform1i(g_uv_mapping_type_uniform, 0);
         DrawVirtualObject("the_bonus");
+        
+        if (g_Show_BBOX)
+            DrawBoundingBox("the_bonus");
     }
 }
 
@@ -2028,6 +2047,10 @@ void DrawTrees()
         glUniform1i(g_object_id_uniform, TREE_LEAVES);
         glUniform1i(g_uv_mapping_type_uniform, 5);
         DrawVirtualObject("tree_leaves");
+
+        if (g_Show_BBOX) {
+            DrawBoundingBox("tree_body");
+        }
     }
 }
 
@@ -2037,8 +2060,8 @@ void DrawWheelsWithTransform(const char* object_name, glm::mat4 transform)
     glm::vec3 bbox_max = g_VirtualScene[object_name].bbox_max;
     glUniform4f(g_bbox_min_uniform, bbox_min.x, bbox_min.y, bbox_min.z, 1.0f);
     glUniform4f(g_bbox_max_uniform, bbox_max.x, bbox_max.y, bbox_max.z, 1.0f);
-    if (g_Show_BBOX == true) 
-        DrawBoundingBox(bbox_min, bbox_max);
+    // if (g_Show_BBOX == true) 
+    //     DrawBoundingBox(bbox_min, bbox_max);
         
     SceneObject& obj = g_VirtualScene[object_name];
     glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(transform));
@@ -2129,19 +2152,25 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
     // Atualiza a posição do carro
     car.carPosition += car.carVelocity * deltaTime;
 
-    
-    glm::vec3 min = g_VirtualScene["front_bumper"].bbox_min;
-    glm::vec3 max = g_VirtualScene["front_bumper"].bbox_max;
-
+    std::pair<glm::vec3, glm::vec3> bbox = ComputeCarAABB(car);
+    glm::vec3 bbox_min = bbox.first;
+    glm::vec3 bbox_max = bbox.second;
     // Verifica colisão com arvores
-    if(cube_cilinder_intersect_tree(car.carPosition, car.carPosition, 1)){
+    if(cube_cilinder_intersect_tree(bbox_min, bbox_max)){
         car.carPosition -= car.carVelocity * deltaTime;
-        car.carVelocity = glm::vec3(0.0f); 
+        car.carVelocity = glm::vec3(0.0f);
+        resetCar(); 
     }
     
-    if(cube_cilinder_intersect_outdoor(car.carPosition, car.carPosition, 1)){
+    if(cube_cilinder_intersect_outdoor(bbox_min, bbox_max)){
         car.carPosition -= car.carVelocity * deltaTime;
         car.carVelocity = glm::vec3(0.0f); 
+        resetCar();
+    }
+
+    if(cube_sphere_intersect_bonus(bbox_min, bbox_max)){
+        car.pontuation_multiplier += 0.1;
+        //POP na renderização do bonus
     }
 
     // Atualiza valores escalares
@@ -2149,7 +2178,6 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
     car.acceleration = glm::length(car.carAcceleration);
     car.acceleration = (dotproduct3(car.carAcceleration, forward_direction) < 0) ? -car.acceleration : car.acceleration;
 }
-
 
 void UpdateFrontWheelsAngle(Car &car, bool key_A_pressed, bool key_D_pressed, float deltaTime) 
 {
@@ -2184,7 +2212,6 @@ void UpdateFrontWheelsAngle(Car &car, bool key_A_pressed, bool key_D_pressed, fl
         }
     }
 }
-
 
 void UpdateWheelsTransforms(Car &car, float deltaTime) 
 {
@@ -2253,4 +2280,64 @@ void UpdatePontuation(Car &car, float deltaTime)
     {
         car.pontuation += abs_wheel_angle * 50 * car.speed * deltaTime * car.pontuation_multiplier;
     }
+}
+
+std::pair<glm::vec3, glm::vec3> ComputeCarAABB(const Car& car) {
+    // 1. Define the local (unrotated) bounding box corners relative to the car's center
+    float halfWidth  = 0.64f;
+
+    // Local space corners
+    std::vector<glm::vec3> localCorners = {
+        // Bottom face
+        glm::vec3(-halfWidth, 0.0f, -1.8f),
+        glm::vec3( halfWidth, 0.0f, -1.8f),
+        glm::vec3( halfWidth, 0.0f,  1.3f),
+        glm::vec3(-halfWidth, 0.0f,  1.3f),
+        // Top face
+        glm::vec3(-halfWidth,  0.8f, -1.8f),
+        glm::vec3( halfWidth,  0.8f, -1.8f),
+        glm::vec3( halfWidth,  0.8f,  1.3f),
+        glm::vec3(-halfWidth,  0.8f,  1.3f)
+    };
+
+    // 2. Create the rotation matrix (assuming rotation around the Y-axis)
+    glm::mat4 rotationMatrix = glm::rotate(glm::mat4(1.0f), car.rotation_angle, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    // 3. Initialize min and max points with extreme values
+    glm::vec3 aabb_min(std::numeric_limits<float>::max());
+    glm::vec3 aabb_max(std::numeric_limits<float>::lowest());
+
+    // 4. Transform each corner and update the AABB
+    for (const auto& corner : localCorners) {
+        // Apply rotation
+        glm::vec4 rotatedCorner = rotationMatrix * glm::vec4(corner, 1.0f);
+
+        // Apply translation to world space
+        glm::vec3 worldCorner = glm::vec3(rotatedCorner) + car.carPosition;
+
+        // Update AABB min
+        aabb_min.x = std::min(aabb_min.x, worldCorner.x);
+        aabb_min.y = std::min(aabb_min.y, worldCorner.y);
+        aabb_min.z = std::min(aabb_min.z, worldCorner.z);
+
+        // Update AABB max
+        aabb_max.x = std::max(aabb_max.x, worldCorner.x);
+        aabb_max.y = std::max(aabb_max.y, worldCorner.y);
+        aabb_max.z = std::max(aabb_max.z, worldCorner.z);
+    }
+
+    return { aabb_min, aabb_max };
+}
+
+void resetCar(){
+    car.carPosition = glm::vec3(0.0f, -0.95f, 0.0f);
+    car.carVelocity = glm::vec3(0.0f, 0.0f, 0.0f);
+    car.carAcceleration = glm::vec3(0.0f, 0.0f, 0.0f);
+    car.speed = 0.0f;
+    car.acceleration = 0.0f;
+    car.wheel_rotation_angle = 0.0f;
+    car.rotation_angle = 0.0f;
+    car.front_wheel_angle = 0.0f;
+    car.pontuation = 0;
+    car.pontuation_multiplier = 1;
 }
