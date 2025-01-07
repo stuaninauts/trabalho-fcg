@@ -82,31 +82,12 @@ bool cube_cilinder_intersect_outdoor(glm::vec3 min, glm::vec3 max){
     return false;
 }
 
-// carro com linha de chegada (cubo x plano)
-bool cube_plane_intersect(glm::vec3 normal, glm::vec3 min, glm::vec3 max){
-    glm::vec3 vertices[8] = {
-        glm::vec3(min.x, min.y, min.z),
-        glm::vec3(min.x, min.y, max.z),
-        glm::vec3(min.x, max.y, min.z),
-        glm::vec3(min.x, max.y, max.z),
-        glm::vec3(max.x, min.y, min.z),
-        glm::vec3(max.x, min.y, max.z),
-        glm::vec3(max.x, max.y, min.z),
-        glm::vec3(max.x, max.y, max.z)
-    };
-
-    float min_distance = std::numeric_limits<float>::max();
-    float max_distance = std::numeric_limits<float>::lowest();
-
-    for (int i = 0; i < 8; i++){
-        float distance = glm::dot(normal, vertices[i]);
-        min_distance = std::min(min_distance, distance);
-        max_distance = std::max(max_distance, distance);
-    }
-
-    return (min_distance <= 0.0f) && (max_distance >= 0.0f);
+// carro com linha de chegada (ponto x cubo)
+bool point_cube_intersect(glm::vec3 point, glm::vec3 min, glm::vec3 max) {
+    return (point.x >= min.x && point.x <= max.x) &&
+           (point.y >= min.y && point.y <= max.y) &&
+           (point.z >= min.z && point.z <= max.z);
 }
-
 
 // carro com objeto bonus (cubo x esfera) 
 bool cube_sphere_intersect(glm::vec3 min, glm::vec3 max, glm::vec3 center, float radius){

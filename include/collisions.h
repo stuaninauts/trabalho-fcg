@@ -6,7 +6,7 @@
 
 bool cube_cilinder_intersect(glm::vec3 min, glm::vec3 max, glm::vec3 center, float radius);
 
-bool cube_plane_intersect(glm::vec3 normal, glm::vec3 min, glm::vec3 max);
+bool point_cube_intersect(glm::vec3 point, glm::vec3 min, glm::vec3 max);
 
 bool cube_sphere_intersect(glm::vec3 min, glm::vec3 max, glm::vec3 center, float radius);
 

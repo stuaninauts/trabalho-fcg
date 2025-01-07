@@ -84,6 +84,8 @@ const std::vector<std::string> selected_objects = {
     "Bottom_panel.001",
 };
 
+
+
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
 
@@ -367,6 +369,11 @@ bool key_DOWN_pressed = false;
 bool key_LEFT_pressed = false;
 bool key_RIGHT_pressed = false;
 
+#define TIMEOUT_FINISH_LINE 5.0f
+
+double last_bonus = glfwGetTime();
+bool can_receive_finish_line = false;
+
 // Toggle do tipo de camera
 // true para look at, false para livre
 bool type_camera_look_at = true;
@@ -374,6 +381,8 @@ float camera_speed = 3.0f;
 // Camera look at: valor inicial de offset em relação ao carro
 glm::vec3 camera_offset(0.0f, MAX_DISTANCE_LOOK_AT_Y, MAX_DISTANCE_LOOK_AT_Z);
 
+glm::vec3 finish_line_min(-5.24f, -0.95f, 2.68f);
+glm::vec3 finish_line_max(5.24f, -0.95f, 3.32f);
 
 int main(int argc, char* argv[])
 {
@@ -622,7 +631,7 @@ int main(int argc, char* argv[])
         glUniform1i(g_uv_mapping_type_uniform, 1);
         DrawVirtualObject("the_plane");
 
-        model = Matrix_Translate(0.0f, -0.95f, 0.0f);
+        model = Matrix_Translate(0.0f, -0.95f, 3.0f);
         glUniformMatrix4fv(g_model_uniform, 1 , GL_FALSE , glm::value_ptr(model));
         glUniform1i(g_object_id_uniform, FINISH_LINE);
         glUniform1i(g_uv_mapping_type_uniform, 1);
@@ -2171,6 +2180,7 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
     std::pair<glm::vec3, glm::vec3> bbox = ComputeCarAABB(car);
     glm::vec3 bbox_min = bbox.first;
     glm::vec3 bbox_max = bbox.second;
+    
     // Verifica colisão com arvores
     if(cube_cilinder_intersect_tree(bbox_min, bbox_max)){
         car.carPosition -= car.carVelocity * deltaTime;
@@ -2178,11 +2188,14 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
         resetCar(); 
     }
     
+    // Verifica colisão com outdoor
     if(cube_cilinder_intersect_outdoor(bbox_min, bbox_max)){
         car.carPosition -= car.carVelocity * deltaTime;
         car.carVelocity = glm::vec3(0.0f); 
         resetCar();
     }
+
+    // Verifica colisão com bonus
     for(int i=0; i<5; i++){
         if(cube_sphere_intersect_bonus(bbox_min, bbox_max, i) && !car.bonus_collected[i]){   
             car.pontuation_multiplier += 0.1;
@@ -2190,6 +2203,17 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
         }
     }
     
+    if((glfwGetTime() - last_bonus) > TIMEOUT_FINISH_LINE){
+        can_receive_finish_line = true;
+    }
+
+    // Verifica colisão com linha de chegada
+    if(point_cube_intersect(car.carPosition, finish_line_min, finish_line_max) && can_receive_finish_line){
+        car.pontuation += 1000;
+        can_receive_finish_line = false;
+        last_bonus = glfwGetTime();
+        std::fill(std::begin(car.bonus_collected), std::end(car.bonus_collected), false);
+    }
 
     // Atualiza valores escalares
     car.speed = glm::length(car.carVelocity);

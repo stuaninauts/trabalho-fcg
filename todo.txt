@@ -4,8 +4,4 @@ stuani:
         codigo shader fragment
 
 pretto:
-    implementar colisoes
-        carro com linha de chegada (cubo x plano)
-        carro com pista (cubo x sla oq (deve ser plano, essa vai ser foda) (talvez tu pode tentar com a grama que nao vai ta em contato direto))
-
     bezier na camera pra ficar gostosinha
