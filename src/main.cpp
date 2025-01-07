@@ -84,7 +84,9 @@ const std::vector<std::string> selected_objects = {
     "Bottom_panel.001",
 };
 
+void InitializeBonusObjects();
 
+void UpdateBonusObjects(float deltaTime); 
 
 // Estrutura que representa um modelo geométrico carregado a partir de um
 // arquivo ".obj". Veja https://en.wikipedia.org/wiki/Wavefront_.obj_file .
@@ -355,6 +357,44 @@ bool key_S_pressed = false;
 bool key_A_pressed = false;
 bool key_D_pressed = false;
 
+
+    struct BezierCurve {
+        glm::vec3 p0; // Starting point
+        glm::vec3 p1; // Control point 1
+        glm::vec3 p2; // Control point 2
+        glm::vec3 p3; // Ending point
+
+        // Evaluate the Bezier curve at parameter t ∈ [0, 1]
+        glm::vec3 evaluate(float t) const {
+            float u = 1.0f - t;
+            float tt = t * t;
+            float uu = u * u;
+            float uuu = uu * u;
+            float ttt = tt * t;
+
+            glm::vec3 point = uuu * p0;
+            point += 3.0f * uu * t * p1;
+            point += 3.0f * u * tt * p2;
+            point += ttt * p3;
+
+            return point;
+     }
+    };  
+
+    struct BonusObject {
+        glm::vec3 initialPosition;
+        BezierCurve pathCurve;
+        float t; // Parameter to track the object's position along the curve
+        float speed; // Speed at which 't' progresses
+        bool active; // Whether the bonus is active (for optional reuse)
+        glm::vec3 currentPostion;
+
+        BonusObject(glm::vec3 initPos, BezierCurve curve, float spd)
+            : initialPosition(initPos), pathCurve(curve), t(0.0f), speed(spd), active(true), currentPostion(initPos) {}
+    };// Vector to hold all bonus objects
+std::vector<BonusObject> bonusObjects;
+
+
 // Camera look-at: define fator de progressão ao usar scroll para zoom
 float delta_look_at_y = MAX_DISTANCE_LOOK_AT_Y - MIN_DISTANCE_LOOK_AT_Y; 
 float delta_look_at_z = MAX_DISTANCE_LOOK_AT_Z - MIN_DISTANCE_LOOK_AT_Z;
@@ -524,6 +564,8 @@ int main(int argc, char* argv[])
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
     
+    InitializeBonusObjects();
+
     // Ficamos em um loop infinito, renderizando, até que o usuário feche a janela
     while (!glfwWindowShouldClose(window))
     {
@@ -599,6 +641,8 @@ int main(int argc, char* argv[])
 
         glUniformMatrix4fv(g_view_uniform       , 1 , GL_FALSE , glm::value_ptr(view));
         glUniformMatrix4fv(g_projection_uniform , 1 , GL_FALSE , glm::value_ptr(projection));
+
+        UpdateBonusObjects(deltaTime); // Update positions based on Bezier curves
 
         DrawCar();
      
@@ -2025,17 +2069,9 @@ void DrawBonus()
 {
     glm::mat4 model = Matrix_Identity();
 
-    std::vector<glm::vec3> bonus_positions = {
-        glm::vec3(16.0f, -0.9f, -89.0f), // curva 1
-        glm::vec3(90.0f, -0.9f, -74.0f), // curva 2
-        glm::vec3(27.0f, -0.9f, -44.0f), // curva 3
-        glm::vec3(63.0f, -0.9f, -4.0f), // curva 4
-        glm::vec3(10.0f, -0.9f, 53.0f), // curva 5
-        // glm::vec3(0.0f, -0.9f, -2.0f) // posicao padrao
-    };
-    for (size_t i = 0; i < bonus_positions.size(); ++i) {
-        if (!car.bonus_collected[i]) {
-            model = Matrix_Translate(bonus_positions[i].x, bonus_positions[i].y, bonus_positions[i].z)
+    for (const auto& bonus : bonusObjects) {
+        if (bonus.active) {
+            model = Matrix_Translate(bonus.currentPostion.x, bonus.currentPostion.y, bonus.currentPostion.z)
                     * Matrix_Scale(0.6f, 0.6f, 0.6f);
             glUniformMatrix4fv(g_model_uniform, 1, GL_FALSE, glm::value_ptr(model));
             glUniform1i(g_object_id_uniform, BONUS);
@@ -2197,9 +2233,9 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
 
     // Verifica colisão com bonus
     for(int i=0; i<5; i++){
-        if(cube_sphere_intersect_bonus(bbox_min, bbox_max, i) && !car.bonus_collected[i]){   
+        if(cube_sphere_intersect_bonus(bbox_min, bbox_max, bonusObjects[i].currentPostion) && bonusObjects[i].active){   
             car.pontuation_multiplier += 0.1;
-            car.bonus_collected[i] = true;
+            bonusObjects[i].active = false;
         }
     }
     
@@ -2383,4 +2419,50 @@ void resetCar(){
     car.pontuation = 0;
     car.pontuation_multiplier = 1;
     std::fill(std::begin(car.bonus_collected), std::end(car.bonus_collected), false);
+}
+
+void InitializeBonusObjects() {
+
+    std::vector<glm::vec3> bonus_positions = {
+        glm::vec3(16.0f, -0.9f, -89.0f), // curva 1
+        glm::vec3(90.0f, -0.9f, -74.0f), // curva 2
+        glm::vec3(27.0f, -0.9f, -44.0f), // curva 3
+        glm::vec3(63.0f, -0.9f, -4.0f), // curva 4
+        glm::vec3(10.0f, -0.9f, 53.0f), // curva 5
+        // glm::vec3(0.0f, -0.9f, -2.0f) // posicao padrao
+    };
+
+    for(const auto& pos : bonus_positions) {
+        BezierCurve curve = {
+            pos, // p0: Start position
+            pos + glm::vec3(-1.0f, 0.0f, 0.3f),  // p1: Control point 1
+            pos + glm::vec3(1.0f, 0.0f, 0.3f),  // p2: Control point 2'1
+            pos   // p3: End position
+        };
+
+        // Create a BonusObject and add it to the vector
+        bonusObjects.emplace_back(pos, curve, 1.0f); // Adjust speed as needed
+    }
+}
+
+void UpdateBonusObjects(float deltaTime) {
+    for (auto& bonus : bonusObjects) {
+        if (bonus.active) {
+            bonus.t += bonus.speed * deltaTime; // Progress along the curve
+
+            if (bonus.t > 1.0f) {
+                bonus.t = 0.0f;
+            }
+
+            bonus.currentPostion = bonus.pathCurve.evaluate(bonus.t);
+
+            // Evaluate the new position on the Bezier curve
+            glm::vec3 newPosition = bonus.pathCurve.evaluate(bonus.t);
+
+            // Update the model matrix or position of the bonus object
+            // Assuming you have a function to update the object's position
+            // For example:
+            // UpdateBonusModelMatrix(bonusModel, newPosition);
+        }
+    }
 }

@@ -31,15 +31,6 @@ std::vector<glm::vec3> outdoor_positions = {
     glm::vec3(1.43f, 0.0f, 56.43f)
 };
 
-std::vector<glm::vec3> bonus_positions = {
-    glm::vec3(16.0f, -0.9f, -89.0f), // curva 1
-    glm::vec3(90.0f, -0.9f, -74.0f), // curva 2
-    glm::vec3(27.0f, -0.9f, -44.0f), // curva 3
-    glm::vec3(63.0f, -0.9f, -4.0f), // curva 4
-    glm::vec3(10.0f, -0.9f, 53.0f), // curva 5
-    // glm::vec3(0.0f, -0.9f, -2.0f) // posicao padrao
-};
-
 
 /*    
         carro com linha de chegada (cubo x plano)
@@ -102,8 +93,8 @@ bool cube_sphere_intersect(glm::vec3 min, glm::vec3 max, glm::vec3 center, float
     return (distance <= radius);
 }
 
-bool cube_sphere_intersect_bonus(glm::vec3 min, glm::vec3 max, int i){
-        if(cube_sphere_intersect(min, max, bonus_positions[i], bonus_radius)) {
+bool cube_sphere_intersect_bonus(glm::vec3 min, glm::vec3 max, glm::vec3 pos){
+        if(cube_sphere_intersect(min, max, pos, bonus_radius)) {
             return true;
         }
     return false;

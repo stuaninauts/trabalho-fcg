@@ -4,4 +4,3 @@ stuani:
         codigo shader fragment
 
 pretto:
-    bezier na camera pra ficar gostosinha
