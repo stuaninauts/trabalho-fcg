@@ -1,10 +1,35 @@
-./bin/Linux/main: src/main.cpp src/glad.c src/textrendering.cpp include/matrices.h include/utils.h include/dejavufont.h src/*.cpp include/*.h
-	mkdir -p bin/Linux
-	g++ -std=c++11 -Wall -Wno-unused-function -g -I ./include/ -o ./bin/Linux/main src/main.cpp src/glad.c src/textrendering.cpp src/tiny_obj_loader.cpp ./lib-linux/libglfw3.a -lrt -lm -ldl -lX11 -lpthread -lXrandr -lXinerama -lXxf86vm -lXcursor
+SRCDIR = src
+INCDIR = include
+OBJDIR = trash
+BINDIR = bin/Linux
+
+SRCS = $(wildcard $(SRCDIR)/*.cpp) $(SRCDIR)/glad.c
+HEADERS = $(wildcard $(INCDIR)/*.h)
+
+OBJS = $(patsubst $(SRCDIR)/%.cpp,$(OBJDIR)/%.o,$(SRCS:$(SRCDIR)/%.c=$(OBJDIR)/%.o))
+
+OUTFILE = $(BINDIR)/main
+
+CXX = g++
+CXXFLAGS = -std=c++11 -Wall -Wno-unused-function -g -I$(INCDIR)
+LDFLAGS = ./lib-linux/libglfw3.a -lrt -lm -ldl -lX11 -lpthread -lXrandr -lXinerama -lXxf86vm -lXcursor
+
+$(OUTFILE): $(OBJS)
+	mkdir -p $(BINDIR)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LDFLAGS)
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(HEADERS)
+	mkdir -p $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.c $(HEADERS)
+	mkdir -p $(OBJDIR)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 .PHONY: clean run
-clean:
-	rm -f bin/Linux/main
 
-run: ./bin/Linux/main
-	cd bin/Linux && ./main
+clean:
+	rm -rf $(OBJDIR) $(OUTFILE)
+
+run: $(OUTFILE)
+	cd $(BINDIR) && ./main
