@@ -2458,9 +2458,6 @@ void UpdateBonusObjects(float deltaTime) {
 
             bonus.currentPostion = bonus.pathCurve.evaluate(bonus.t);
 
-            // Evaluate the new position on the Bezier curve
-            glm::vec3 newPosition = bonus.pathCurve.evaluate(bonus.t);
-
             // Update the model matrix or position of the bonus object
             // Assuming you have a function to update the object's position
             // For example:
