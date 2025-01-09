@@ -182,8 +182,6 @@ struct Car
     int pontuation;
     float pontuation_multiplier;
 
-    bool bonus_collected[5] = {false, false, false, false, false};
-
     // Construtor
     Car() 
         : carPosition(0.0f, -0.95f, 0.0f),
@@ -2248,7 +2246,9 @@ void UpdateCarSpeedAndPosition(Car &car, bool key_W_pressed, bool key_S_pressed,
         car.pontuation += 1000;
         can_receive_finish_line = false;
         last_bonus = glfwGetTime();
-        std::fill(std::begin(car.bonus_collected), std::end(car.bonus_collected), false);
+        for (auto& bonus : bonusObjects) {
+            bonus.active = true;
+        }    
     }
 
     // Atualiza valores escalares
@@ -2418,7 +2418,9 @@ void resetCar(){
     car.front_wheel_angle = 0.0f;
     car.pontuation = 0;
     car.pontuation_multiplier = 1;
-    std::fill(std::begin(car.bonus_collected), std::end(car.bonus_collected), false);
+    for (auto& bonus : bonusObjects) {
+        bonus.active = true;
+    }
 }
 
 void InitializeBonusObjects() {

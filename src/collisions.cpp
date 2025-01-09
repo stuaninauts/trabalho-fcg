@@ -5,7 +5,7 @@
 #include <cstdio>
 
 float tree_radius = 0.27f;       
-float outdoor_radius = 0.5f;
+float outdoor_radius = 0.2f;
 float bonus_radius = 0.1f; 
 
 std::vector<glm::vec3> tree_positions = {
